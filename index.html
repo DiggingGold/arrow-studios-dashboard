@@ -298,7 +298,21 @@ tbody tr:hover{background:#0f766e08}
       </div>
     </div>
 
-    <div class="foot"><span id="footnote" style="display:block;color:var(--accent);font-weight:600;margin-bottom:8px"></span>Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so "Guests hosted" is shown as reservation count. Cancellations are not synced from Lodgify to PriceLabs (cancelled bookings are dropped from the feed), so they show as n/a — track them in Lodgify directly.</div>
+    <div class="sec"><span>Cancellations (Booking.com export)</span></div>
+    <div class="grid">
+      <div class="card full">
+        <h3>Cancelled bookings by month</h3>
+        <div class="hint">From your Booking.com extranet cancellations export (as of <span id="cancelAsof"></span>). Bars = lost revenue by arrival month; line = number of cancellations. Not from PriceLabs — PriceLabs doesn't sync cancellations. Respects the property &amp; date filters.</div>
+        <div class="chartbox tall"><canvas id="chCancel"></canvas></div>
+      </div>
+      <div class="card full">
+        <h3>Cancellations by property</h3>
+        <div class="hint">Count and lost revenue per property from the Booking.com export.</div>
+        <table id="tblCancel"><thead></thead><tbody></tbody></table>
+      </div>
+    </div>
+
+    <div class="foot"><span id="footnote" style="display:block;color:var(--accent);font-weight:600;margin-bottom:8px"></span>Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so "Guests hosted" is shown as reservation count. Cancellations are sourced from your Booking.com extranet export (PriceLabs does not sync cancellations); they'll switch to live PriceLabs data automatically if that sync is fixed.</div>
   </div>
 
   <div id="errbox" class="state err" style="display:none"></div>
@@ -320,6 +334,8 @@ const COMMISSION_RATE={ BookingCom:0.15, AirbnbIntegration:0.16, HomeAway:0.16, 
 const DIRECT_SOURCES=new Set(['Manual','OH']); // arrowstudios.co.nz / commission-free
 const CLEANING_PCT=20; // modelled 20% of revenue
 const rateFor=s=>(s in COMMISSION_RATE)?COMMISSION_RATE[s]:0.15; // unknown OTA -> assume 15%
+const EMBEDDED_CANCELLATIONS=[{"name":"Stone Cottage","arr":1775520000000,"val":1845.0,"booked":1767571200000},{"name":"Arrow Junction Cottage","arr":1789689600000,"val":1646.39,"booked":1767744000000},{"name":"Stone Cottage","arr":1780012800000,"val":1633.28,"booked":1768608000000},{"name":"Arrow Junction Cottage","arr":1798675200000,"val":3933.0,"booked":1770163200000},{"name":"Stone Cottage","arr":1781740800000,"val":1245.45,"booked":1771113600000},{"name":"Stone Cottage","arr":1775520000000,"val":1868.75,"booked":1771113600000},{"name":"Stone Cottage","arr":1777334400000,"val":1299.5,"booked":1771113600000},{"name":"Stone Cottage","arr":1783814400000,"val":4309.9,"booked":1771718400000},{"name":"Stone Cottage","arr":1777334400000,"val":1328.25,"booked":1773187200000},{"name":"Stone Cottage","arr":1797206400000,"val":3289.0,"booked":1774051200000},{"name":"Arrow Junction Cottage","arr":1782345600000,"val":3765.14,"booked":1776038400000},{"name":"Arrow Junction Cottage","arr":1783036800000,"val":2850.39,"booked":1776902400000},{"name":"Stone Cottage","arr":1779926400000,"val":1481.44,"booked":1776988800000},{"name":"Stone Cottage","arr":1791331200000,"val":1999.28,"booked":1777161600000},{"name":"Arrow Junction Cottage","arr":1785801600000,"val":2752.6,"booked":1777248000000},{"name":"Stone Cottage","arr":1785369600000,"val":1999.28,"booked":1777507200000},{"name":"Stone Cottage","arr":1783382400000,"val":3676.26,"booked":1778284800000},{"name":"Arrow Junction Cottage","arr":1790553600000,"val":4119.3,"booked":1778803200000},{"name":"Stone Cottage","arr":1788307200000,"val":1485.8,"booked":1778803200000},{"name":"Stone Cottage","arr":1790467200000,"val":2163.15,"booked":1778976000000},{"name":"Arrow Junction Cottage","arr":1786665600000,"val":866.29,"booked":1779580800000},{"name":"Arrow Junction Cottage","arr":1791590400000,"val":728.44,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1780099200000,"val":751.41,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1784851200000,"val":766.62,"booked":1780012800000},{"name":"Stone Cottage","arr":1784246400000,"val":1035.0,"booked":1783468800000},{"name":"Arrow Junction Cottage","arr":1788134400000,"val":992.05,"booked":1784160000000}]; // Booking.com extranet export (cancelled); PriceLabs doesn't sync cancellations
+const CANCEL_ASOF='2026-08-14';
 // Market benchmark (PriceLabs neighbourhood comp set, nightly rate percentiles, NZD)
 const MARKET_ASOF='2026-08-03';
 const MARKET={
@@ -503,6 +519,8 @@ function render(){
   const avail=activeListings()*daysBetween(f,t);
   const directRev=booked.filter(r=>DIRECT_SOURCES.has(r.booking_source)).reduce((s,r)=>s+(+r.rental_revenue||0),0);
   const commSaved=directRev*0.15;
+  const cxAll=EMBEDDED_CANCELLATIONS.filter(x=>selProps.has(x.name)&&x.arr>=f&&x.arr<=t);
+  const cxVal=cxAll.reduce((s,x)=>s+(+x.val||0),0);
   const commTotal=booked.reduce((s,r)=>s+(+r.rental_revenue||0)*rateFor(r.booking_source),0);
   const cleanTotal=rev*CLEANING_PCT/100;
   const contribution=rev-commTotal-cleanTotal;
@@ -516,7 +534,7 @@ function render(){
     ['Avg stay length',n?(nights/n).toFixed(2)+' nts':'—','','bed','#0d9488'],
     ['Avg lead time',n?Math.round(sum(booked,'lead_time')/n)+' days':'—','booking→check-in','clock','#d97706'],
     ['Guests hosted',n.toLocaleString(),'reservations*','users','#db2777'],
-    ['Cancellations',cancelled.length?cancelled.length.toLocaleString():'n/a',cancelled.length?(sum(cancelled,'no_of_days')+' nights'):'not synced from Lodgify','x','#9ca3af'],
+    ['Cancellations',cxAll.length?cxAll.length.toLocaleString():'0',cxAll.length?(nz(cxVal)+' lost (B.com)'):'none in range','x','#dc2626'],
     ['Commission saved (direct)',nz(commSaved),nz(directRev)+' direct rev','gift','#16a34a','hero'],
     ['Operating margin',rev?Math.round(contribution/rev*100)+'%':'—','after commission & cleaning','percent','#0d9488'],
     ['Net contribution',nz(contribution),'rev − commission − cleaning','cash','#0f766e'],
@@ -703,6 +721,19 @@ function render(){
   const yPal={};yrs.forEach((y,i)=>yPal[y]=['#94a3b8','#0f766e','#f59e0b','#2563eb'][i%4]);
   drawGroup('chQMatrix',['Q1','Q2','Q3','Q4'], yrs.map(y=>({label:String(y),data:[1,2,3,4].map(q=>Math.round((qm[y][q]&&qm[y][q].rev)||0)),color:yPal[y]})));
   drawGroup('chAnnual', yrs.map(String), [{label:'Revenue',data:yrs.map(y=>Math.round(yr[y].rev)),color:'#0f766e',perBar:true,colors:yrs.map(y=>yPal[y])}]);
+
+  // cancellations (from Booking.com export)
+  const cm={};
+  cxAll.forEach(x=>{const k=ym(x.arr);(cm[k]=cm[k]||{n:0,v:0});cm[k].n++;cm[k].v+=+x.val||0;});
+  const cMon=Object.keys(cm).sort();
+  drawCancel(cMon.map(ymLabel), cMon.map(k=>Math.round(cm[k].v)), cMon.map(k=>cm[k].n));
+  const cbp={};
+  cxAll.forEach(x=>{(cbp[x.name]=cbp[x.name]||{n:0,v:0});cbp[x.name].n++;cbp[x.name].v+=+x.val||0;});
+  const cbpK=Object.keys(cbp).sort((a,b)=>cbp[b].v-cbp[a].v);
+  fillTable('tblCancel',['Property','Cancellations','Lost revenue'],
+    cbpK.map(k=>[k,cbp[k].n,nz(cbp[k].v)]),
+    ['Total',cxAll.length,nz(cxVal)]);
+  const _ca=document.getElementById('cancelAsof'); if(_ca)_ca.textContent=CANCEL_ASOF;
 }
 
 function fillTable(id,head,rows,total){
@@ -800,6 +831,20 @@ function drawPace(labels,now,prev){
       plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+nz(c.parsed.y)}}},
       scales:{y:{beginAtZero:true,ticks:{callback:v=>'$'+(v/1000)+'k',font:{size:10}}},x:{ticks:{font:{size:10}}}}}});
+}
+function drawCancel(labels,lostRev,counts){
+  destroy('chCancel');
+  charts['chCancel']=safeChart(document.getElementById('chCancel'),{
+    data:{labels,datasets:[
+      {type:'bar',label:'Lost revenue',data:lostRev,backgroundColor:'#e11d48',borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'Cancellations',data:counts,borderColor:'#1f2937',backgroundColor:'#1f2937',tension:.3,pointRadius:2,yAxisID:'y1',order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>c.dataset.type==='line'?(c.parsed.y+' cancellations'):('Lost revenue: '+nz(c.parsed.y))}}},
+      scales:{y:{position:'left',beginAtZero:true,ticks:{callback:v=>'$'+(v/1000)+'k',font:{size:10}}},
+        y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false},ticks:{stepSize:1,font:{size:10}}},
+        x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45}}}}});
 }
 function drawQCost(labels,costs,net,ratioPct){
   destroy('chQCost');
