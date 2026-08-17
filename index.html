@@ -40,6 +40,31 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 h1{font-size:20px;margin:0;font-weight:750;letter-spacing:-.01em}
 .sub{color:var(--muted2);font-size:12.5px;margin-top:2px}
 .asof{font-size:11.5px;color:#0f766e;background:#0f766e14;border:1px solid #0f766e26;padding:6px 11px;border-radius:999px;font-weight:600;white-space:nowrap}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tbtn{font:inherit;font-size:12.5px;font-weight:600;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tbtn:hover{border-color:var(--accent);color:var(--accent)}
+.controls.collapsed{display:none}
+.cancsum{font-size:13px;margin:2px 0 10px;color:var(--muted2)} .cancsum b{color:var(--ink)}
+[data-theme="dark"]{--bg:#0f1419;--card:#1a2230;--ink:#e6edf3;--muted2:#93a4b8;--line:#2b3648;
+  --sh:0 1px 2px rgba(0,0,0,.35);--sh2:0 6px 16px rgba(0,0,0,.5);}
+[data-theme="dark"] body{background-image:none}
+[data-theme="dark"] .controls{background:rgba(26,34,48,.92)}
+[data-theme="dark"] .controls input,[data-theme="dark"] .controls select,[data-theme="dark"] .propbtn,[data-theme="dark"] .propmenu,[data-theme="dark"] .chip{background:#0f1826;color:var(--ink)}
+[data-theme="dark"] .propmenu .opt:hover,[data-theme="dark"] tbody tr:hover{background:#ffffff10}
+[data-theme="dark"] .asof{color:#5eead4;background:#134e4a44;border-color:#134e4a}
+[data-theme="dark"] .chip.active{color:#fff}
+@media(max-width:640px){
+  .wrap{padding:12px 12px 48px}
+  header{gap:8px} h1{font-size:16.5px}
+  .controls{top:6px;padding:10px;gap:8px} .controls label{font-size:10px}
+  .propbtn{min-width:150px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .kpi{padding:12px 13px} .kpi .val{font-size:20px}
+  .card{padding:12px} .card h3{font-size:13.5px}
+  .chartbox{height:220px} .chartbox.tall{height:260px}
+  .card table{display:block;overflow-x:auto;white-space:nowrap}
+  th,td{padding:6px 7px;font-size:11px}
+}
 .controls{position:sticky;top:10px;z-index:30;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;
   margin:0 0 20px;padding:13px 14px;background:rgba(255,255,255,.82);backdrop-filter:blur(8px);
   border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh2)}
@@ -110,7 +135,11 @@ tbody tr:hover{background:#0f766e08}
         <div class="sub">PriceLabs data · Stone Cottage &amp; AJC · all figures NZD</div>
       </div>
     </div>
-    <div class="asof" id="asof"></div>
+    <div class="tools">
+      <button class="tbtn" id="filterToggle" type="button">Hide filters</button>
+      <button class="tbtn" id="themeToggle" type="button">Dark</button>
+      <div class="asof" id="asof"></div>
+    </div>
   </header>
 
   <div id="loading" class="state"><span class="spin"></span> &nbsp;Pulling booking data from PriceLabs…</div>
@@ -302,7 +331,8 @@ tbody tr:hover{background:#0f766e08}
     <div class="grid">
       <div class="card full">
         <h3>Cancelled bookings by month</h3>
-        <div class="hint">From your Booking.com extranet cancellations export (as of <span id="cancelAsof"></span>). Bars = lost revenue by arrival month; line = number of cancellations. Not from PriceLabs — PriceLabs doesn't sync cancellations. Respects the property &amp; date filters.</div>
+        <div class="hint">From your Booking.com extranet cancellations export (as of <span id="cancelAsof"></span>). Bars = lost revenue by arrival month; line = number of cancellations. "Re-let" = the cancelled dates were later covered by a confirmed booking. Not from PriceLabs. Respects the property &amp; date filters.</div>
+        <div class="cancsum" id="cancelSummary"></div>
         <div class="chartbox tall"><canvas id="chCancel"></canvas></div>
       </div>
       <div class="card full">
@@ -334,7 +364,7 @@ const COMMISSION_RATE={ BookingCom:0.15, AirbnbIntegration:0.16, HomeAway:0.16, 
 const DIRECT_SOURCES=new Set(['Manual','OH']); // arrowstudios.co.nz / commission-free
 const CLEANING_PCT=20; // modelled 20% of revenue
 const rateFor=s=>(s in COMMISSION_RATE)?COMMISSION_RATE[s]:0.15; // unknown OTA -> assume 15%
-const EMBEDDED_CANCELLATIONS=[{"name":"Stone Cottage","arr":1775520000000,"val":1845.0,"booked":1767571200000},{"name":"Arrow Junction Cottage","arr":1789689600000,"val":1646.39,"booked":1767744000000},{"name":"Stone Cottage","arr":1780012800000,"val":1633.28,"booked":1768608000000},{"name":"Arrow Junction Cottage","arr":1798675200000,"val":3933.0,"booked":1770163200000},{"name":"Stone Cottage","arr":1781740800000,"val":1245.45,"booked":1771113600000},{"name":"Stone Cottage","arr":1775520000000,"val":1868.75,"booked":1771113600000},{"name":"Stone Cottage","arr":1777334400000,"val":1299.5,"booked":1771113600000},{"name":"Stone Cottage","arr":1783814400000,"val":4309.9,"booked":1771718400000},{"name":"Stone Cottage","arr":1777334400000,"val":1328.25,"booked":1773187200000},{"name":"Stone Cottage","arr":1797206400000,"val":3289.0,"booked":1774051200000},{"name":"Arrow Junction Cottage","arr":1782345600000,"val":3765.14,"booked":1776038400000},{"name":"Arrow Junction Cottage","arr":1783036800000,"val":2850.39,"booked":1776902400000},{"name":"Stone Cottage","arr":1779926400000,"val":1481.44,"booked":1776988800000},{"name":"Stone Cottage","arr":1791331200000,"val":1999.28,"booked":1777161600000},{"name":"Arrow Junction Cottage","arr":1785801600000,"val":2752.6,"booked":1777248000000},{"name":"Stone Cottage","arr":1785369600000,"val":1999.28,"booked":1777507200000},{"name":"Stone Cottage","arr":1783382400000,"val":3676.26,"booked":1778284800000},{"name":"Arrow Junction Cottage","arr":1790553600000,"val":4119.3,"booked":1778803200000},{"name":"Stone Cottage","arr":1788307200000,"val":1485.8,"booked":1778803200000},{"name":"Stone Cottage","arr":1790467200000,"val":2163.15,"booked":1778976000000},{"name":"Arrow Junction Cottage","arr":1786665600000,"val":866.29,"booked":1779580800000},{"name":"Arrow Junction Cottage","arr":1791590400000,"val":728.44,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1780099200000,"val":751.41,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1784851200000,"val":766.62,"booked":1780012800000},{"name":"Stone Cottage","arr":1784246400000,"val":1035.0,"booked":1783468800000},{"name":"Arrow Junction Cottage","arr":1788134400000,"val":992.05,"booked":1784160000000}]; // Booking.com extranet export (cancelled); PriceLabs doesn't sync cancellations
+const EMBEDDED_CANCELLATIONS=[{"name":"Stone Cottage","arr":1775520000000,"dep":1775865600000,"val":1845.0,"booked":1767571200000},{"name":"Arrow Junction Cottage","arr":1789689600000,"dep":1790121600000,"val":1646.39,"booked":1767744000000},{"name":"Stone Cottage","arr":1780012800000,"dep":1780358400000,"val":1633.28,"booked":1768608000000},{"name":"Arrow Junction Cottage","arr":1798675200000,"dep":1799020800000,"val":3933.0,"booked":1770163200000},{"name":"Stone Cottage","arr":1781740800000,"dep":1782000000000,"val":1245.45,"booked":1771113600000},{"name":"Stone Cottage","arr":1775520000000,"dep":1775779200000,"val":1868.75,"booked":1771113600000},{"name":"Stone Cottage","arr":1777334400000,"dep":1777593600000,"val":1299.5,"booked":1771113600000},{"name":"Stone Cottage","arr":1783814400000,"dep":1784332800000,"val":4309.9,"booked":1771718400000},{"name":"Stone Cottage","arr":1777334400000,"dep":1777593600000,"val":1328.25,"booked":1773187200000},{"name":"Stone Cottage","arr":1797206400000,"dep":1797638400000,"val":3289.0,"booked":1774051200000},{"name":"Arrow Junction Cottage","arr":1782345600000,"dep":1783209600000,"val":3765.14,"booked":1776038400000},{"name":"Arrow Junction Cottage","arr":1783036800000,"dep":1783555200000,"val":2850.39,"booked":1776902400000},{"name":"Stone Cottage","arr":1779926400000,"dep":1780272000000,"val":1481.44,"booked":1776988800000},{"name":"Stone Cottage","arr":1791331200000,"dep":1791676800000,"val":1999.28,"booked":1777161600000},{"name":"Arrow Junction Cottage","arr":1785801600000,"dep":1786406400000,"val":2752.6,"booked":1777248000000},{"name":"Stone Cottage","arr":1785369600000,"dep":1785715200000,"val":1999.28,"booked":1777507200000},{"name":"Stone Cottage","arr":1783382400000,"dep":1783900800000,"val":3676.26,"booked":1778284800000},{"name":"Arrow Junction Cottage","arr":1790553600000,"dep":1791331200000,"val":4119.3,"booked":1778803200000},{"name":"Stone Cottage","arr":1788307200000,"dep":1788566400000,"val":1485.8,"booked":1778803200000},{"name":"Stone Cottage","arr":1790467200000,"dep":1790812800000,"val":2163.15,"booked":1778976000000},{"name":"Arrow Junction Cottage","arr":1786665600000,"dep":1786924800000,"val":866.29,"booked":1779580800000},{"name":"Arrow Junction Cottage","arr":1791590400000,"dep":1791849600000,"val":728.44,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1780099200000,"dep":1780358400000,"val":751.41,"booked":1779667200000},{"name":"Arrow Junction Cottage","arr":1784851200000,"dep":1785110400000,"val":766.62,"booked":1780012800000},{"name":"Stone Cottage","arr":1784246400000,"dep":1784419200000,"val":1035.0,"booked":1783468800000},{"name":"Arrow Junction Cottage","arr":1788134400000,"dep":1788393600000,"val":992.05,"booked":1784160000000}]; // Booking.com extranet export (cancelled); PriceLabs doesn't sync cancellations
 const CANCEL_ASOF='2026-08-14';
 // Market benchmark (PriceLabs neighbourhood comp set, nightly rate percentiles, NZD)
 const MARKET_ASOF='2026-08-03';
@@ -509,7 +539,11 @@ function seasonalOccupancy(rows){
 
 const sum=(a,k)=>a.reduce((s,r)=>s+(+r[k]||0),0);
 
+function applyChartTheme(dark){ if(typeof Chart!=='undefined'){ Chart.defaults.color=dark?'#93a4b8':'#52514e'; Chart.defaults.borderColor=dark?'#2b3648':'#e1e0d9'; } }
+function toggleTheme(){ const dark=document.documentElement.dataset.theme!=='dark'; document.documentElement.dataset.theme=dark?'dark':'light'; const b=document.getElementById('themeToggle'); if(b)b.textContent=dark?'Light':'Dark'; render(); }
+function toggleFilters(){ const c=document.querySelector('.controls'); const hidden=c.classList.toggle('collapsed'); const b=document.getElementById('filterToggle'); if(b)b.textContent=hidden?'Show filters':'Hide filters'; }
 function render(){
+  applyChartTheme(document.documentElement.dataset.theme==='dark');
   const rows=filtered();
   const booked=rows.filter(r=>r.status!=='cancelled');
   const cancelled=rows.filter(r=>r.status==='cancelled');
@@ -722,17 +756,21 @@ function render(){
   drawGroup('chQMatrix',['Q1','Q2','Q3','Q4'], yrs.map(y=>({label:String(y),data:[1,2,3,4].map(q=>Math.round((qm[y][q]&&qm[y][q].rev)||0)),color:yPal[y]})));
   drawGroup('chAnnual', yrs.map(String), [{label:'Revenue',data:yrs.map(y=>Math.round(yr[y].rev)),color:'#0f766e',perBar:true,colors:yrs.map(y=>yPal[y])}]);
 
-  // cancellations (from Booking.com export)
-  const cm={};
-  cxAll.forEach(x=>{const k=ym(x.arr);(cm[k]=cm[k]||{n:0,v:0});cm[k].n++;cm[k].v+=+x.val||0;});
+  // cancellations (from Booking.com export) + re-let analysis vs confirmed bookings
+  const bookedRes=ALL.filter(r=>r.status!=='cancelled');
+  const isRelet=x=>bookedRes.some(r=>r.listing_name===x.name && (+r.start_date)<x.dep && ((+r.start_date)+(+r.no_of_days||0)*86400000)>x.arr);
+  const cm={}, cbp={}; let reletVal=0, reletN=0;
+  cxAll.forEach(x=>{const rel=isRelet(x); if(rel){reletVal+=+x.val||0;reletN++;}
+    const k=ym(x.arr);(cm[k]=cm[k]||{n:0,v:0});cm[k].n++;cm[k].v+=+x.val||0;
+    (cbp[x.name]=cbp[x.name]||{n:0,v:0,rel:0});cbp[x.name].n++;cbp[x.name].v+=+x.val||0;if(rel)cbp[x.name].rel+=+x.val||0;});
   const cMon=Object.keys(cm).sort();
   drawCancel(cMon.map(ymLabel), cMon.map(k=>Math.round(cm[k].v)), cMon.map(k=>cm[k].n));
-  const cbp={};
-  cxAll.forEach(x=>{(cbp[x.name]=cbp[x.name]||{n:0,v:0});cbp[x.name].n++;cbp[x.name].v+=+x.val||0;});
   const cbpK=Object.keys(cbp).sort((a,b)=>cbp[b].v-cbp[a].v);
-  fillTable('tblCancel',['Property','Cancellations','Lost revenue'],
-    cbpK.map(k=>[k,cbp[k].n,nz(cbp[k].v)]),
-    ['Total',cxAll.length,nz(cxVal)]);
+  fillTable('tblCancel',['Property','Cancellations','Lost revenue','Re-let recovered'],
+    cbpK.map(k=>[k,cbp[k].n,nz(cbp[k].v),nz(cbp[k].rel)]),
+    ['Total',cxAll.length,nz(cxVal),nz(reletVal)]);
+  const _cs=document.getElementById('cancelSummary');
+  if(_cs)_cs.innerHTML=cxAll.length?(`<b>${cxAll.length}</b> cancellations · <b>${nz(cxVal)}</b> lost · <b style="color:#0f766e">${nz(reletVal)}</b> re-let by confirmed bookings (${reletN}) · <b style="color:#b91c1c">${nz(cxVal-reletVal)}</b> still open`):'No cancellations in the selected range.';
   const _ca=document.getElementById('cancelAsof'); if(_ca)_ca.textContent=CANCEL_ASOF;
 }
 
@@ -945,6 +983,10 @@ function drawMonthly(labels,rev,nights){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     initControls();
+    const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.dataset.theme=prefersDark?'dark':'light';
+    const _tb=document.getElementById('themeToggle'); if(_tb){_tb.textContent=prefersDark?'Light':'Dark';_tb.addEventListener('click',toggleTheme);}
+    const _fb=document.getElementById('filterToggle'); if(_fb)_fb.addEventListener('click',toggleFilters);
     render();
   }catch(e){
     document.getElementById('loading').style.display='none';
