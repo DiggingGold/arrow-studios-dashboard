@@ -257,16 +257,6 @@ tbody tr:hover{background:#0f766e08}
         <div class="hint">Calendar quarters. Bars = revenue; line = QoQ % change.</div>
         <div class="chartbox tall"><canvas id="chQtr"></canvas></div>
       </div>
-      <div class="card">
-        <h3>Monthly detail</h3>
-        <div class="hint">Revenue and month-on-month change by check-in month.</div>
-        <table id="tblTrend"><thead></thead><tbody></tbody></table>
-      </div>
-      <div class="card">
-        <h3>Quarterly detail</h3>
-        <div class="hint">Revenue and quarter-on-quarter change by calendar quarter.</div>
-        <table id="tblQtr"><thead></thead><tbody></tbody></table>
-      </div>
     </div>
 
     <div class="sec"><span>Channels &amp; direct bookings</span></div>
@@ -684,8 +674,6 @@ function render(){
   const qQoQ=qRev.map((v,i)=>i>0&&qRev[i-1]>0?Math.round((v-qRev[i-1])/qRev[i-1]*100):null);
   drawQtr(qK, qRev, qQoQ);
   const pc=p=>p==null?'<span style="color:#9ca3af">—</span>':`<span style="color:${p>=0?'#0f766e':'#b91c1c'};font-weight:600">${p>=0?'+':''}${p}%</span>`;
-  fillTable('tblTrend',['Month','Revenue','MoM'], tK.map((k,i)=>[ymLabel(k),nz(tRev[i]),pc(tMoM[i])]));
-  fillTable('tblQtr',['Quarter','Revenue','QoQ'], qK.map((k,i)=>[k,nz(qRev[i]),pc(qQoQ[i])]));
 
   // channel mix over time (stacked %)
   const mix={};
