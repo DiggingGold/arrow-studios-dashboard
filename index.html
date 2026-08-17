@@ -805,7 +805,7 @@ function drawQCost(labels,costs,net,ratioPct){
   destroy('chQCost');
   charts['chQCost']=safeChart(document.getElementById('chQCost'),{
     data:{labels,datasets:[
-      {type:'bar',label:'Costs (commission + cleaning)',data:costs,backgroundColor:'#e11d48',stack:'q',order:2,borderRadius:{topLeft:0,topRight:0}},
+      {type:'bar',label:'Costs (commission + cleaning)',data:costs,backgroundColor:'#e11d48',stack:'q',order:2,borderRadius:0},
       {type:'bar',label:'Net income',data:net,backgroundColor:'#0f766e',stack:'q',order:2,borderRadius:4},
       {type:'line',label:'Cost:income %',data:ratioPct,borderColor:'#1f2937',backgroundColor:'#1f2937',tension:.3,pointRadius:2,yAxisID:'y1',order:1,spanGaps:true}
     ]},
