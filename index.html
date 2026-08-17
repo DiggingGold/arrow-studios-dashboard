@@ -298,7 +298,7 @@ tbody tr:hover{background:#0f766e08}
       </div>
     </div>
 
-    <div class="foot"><span id="footnote" style="display:block;color:var(--accent);font-weight:600;margin-bottom:8px"></span>Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so "Guests hosted" is shown as reservation count. Cancellations appear when present in the source.</div>
+    <div class="foot"><span id="footnote" style="display:block;color:var(--accent);font-weight:600;margin-bottom:8px"></span>Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so "Guests hosted" is shown as reservation count. Cancellations are not synced from Lodgify to PriceLabs (cancelled bookings are dropped from the feed), so they show as n/a — track them in Lodgify directly.</div>
   </div>
 
   <div id="errbox" class="state err" style="display:none"></div>
@@ -516,7 +516,7 @@ function render(){
     ['Avg stay length',n?(nights/n).toFixed(2)+' nts':'—','','bed','#0d9488'],
     ['Avg lead time',n?Math.round(sum(booked,'lead_time')/n)+' days':'—','booking→check-in','clock','#d97706'],
     ['Guests hosted',n.toLocaleString(),'reservations*','users','#db2777'],
-    ['Cancellations',cancelled.length.toLocaleString(),sum(cancelled,'no_of_days')+' nights','x','#dc2626'],
+    ['Cancellations',cancelled.length?cancelled.length.toLocaleString():'n/a',cancelled.length?(sum(cancelled,'no_of_days')+' nights'):'not synced from Lodgify','x','#9ca3af'],
     ['Commission saved (direct)',nz(commSaved),nz(directRev)+' direct rev','gift','#16a34a','hero'],
     ['Operating margin',rev?Math.round(contribution/rev*100)+'%':'—','after commission & cleaning','percent','#0d9488'],
     ['Net contribution',nz(contribution),'rev − commission − cleaning','cash','#0f766e'],
