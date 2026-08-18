@@ -974,9 +974,8 @@ function drawMonthly(labels,rev,nights){
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
     initControls();
-    const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.dataset.theme=prefersDark?'dark':'light';
-    const _tb=document.getElementById('themeToggle'); if(_tb){_tb.textContent=prefersDark?'Light':'Dark';_tb.addEventListener('click',toggleTheme);}
+    document.documentElement.dataset.theme='dark';
+    const _tb=document.getElementById('themeToggle'); if(_tb){_tb.textContent='Light';_tb.addEventListener('click',toggleTheme);}
     const _fb=document.getElementById('filterToggle'); if(_fb)_fb.addEventListener('click',toggleFilters);
     render();
   }catch(e){
