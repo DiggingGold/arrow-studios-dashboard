@@ -720,7 +720,7 @@ function render(){
   // ===== Annual & quarterly comparison (costs = commission + cleaning) =====
   const yr={}, qm={};
   const costOf=r=>{const rv=+r.rental_revenue||0;return rv*(rateFor(r.booking_source)+CLEANING_PCT/100);};
-  bookedAll.forEach(r=>{const d=new Date(r.start_date), y=d.getUTCFullYear(), q=Math.floor(d.getUTCMonth()/3)+1, rv=+r.rental_revenue||0, ct=costOf(r);
+  booked.forEach(r=>{const d=new Date(r.start_date), y=d.getUTCFullYear(), q=Math.floor(d.getUTCMonth()/3)+1, rv=+r.rental_revenue||0, ct=costOf(r);
     (yr[y]=yr[y]||{rev:0,nights:0,n:0,cost:0}); yr[y].rev+=rv; yr[y].nights+=+r.no_of_days||0; yr[y].n++; yr[y].cost+=ct;
     (qm[y]=qm[y]||{}); (qm[y][q]=qm[y][q]||{rev:0,cost:0}); qm[y][q].rev+=rv; qm[y][q].cost+=ct;});
   const yrs=Object.keys(yr).map(Number).sort();
