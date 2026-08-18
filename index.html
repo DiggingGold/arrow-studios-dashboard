@@ -229,7 +229,7 @@ tbody tr:hover{background:#0f766e08}
       </div>
       <div class="card full">
         <h3>Average occupancy by season</h3>
-        <div class="hint">Southern-Hemisphere seasons — Summer = Dec/Jan/Feb, Winter = Jun/Jul/Aug. Booked nights ÷ available nights, counting only months each property was actually listed. Respects the property, channel &amp; date selection.</div>
+        <div class="hint">Summer = Dec/Jan/Feb, Winter = Jun/Jul/Aug. Booked nights ÷ available nights, counting only months each property was actually listed. Respects the property &amp; channel selection.</div>
         <div class="chartbox"><canvas id="chSeason"></canvas></div>
       </div>
       <div class="card full">
@@ -616,8 +616,8 @@ function render(){
   booked.forEach(r=>{const d=+r.no_of_days||0;let i=d<=1?0:d<=2?1:d<=3?2:d<=5?3:d<=7?4:5;nb[i][1]++;});
   drawBar('chLen',nb.map(x=>x[0]),nb.map(x=>x[1]),nb.map(()=>'#8b5cf6'),v=>v+' res');
 
-  // seasonal occupancy (all dates, selected properties/channel)
-  const seas=seasonalOccupancy(filtered());
+  // seasonal occupancy (full history, selected properties/channel; ignores date filter)
+  const seas=seasonalOccupancy(filteredNoDate());
   const sProps=Object.keys(seas).sort((a,b)=>(seas[b].summer||0)-(seas[a].summer||0));
   drawSeason(sProps.map(shortName),
     sProps.map(p=>seas[p].summer),
