@@ -552,15 +552,20 @@ function render(){
   const cleanTotal=rev*CLEANING_PCT/100;
   const contribution=rev-commTotal-cleanTotal;
   // accurate occupancy: allocate each booked night to the calendar day it covers (source = property/channel filtered, all dates so stays that span the window boundary count)
+  // smart cap: for windows that start in the past, cap the denominator at today (achieved occupancy); purely-future windows keep the full window (forward-booked occupancy)
+  const _nd=new Date(), today=Date.UTC(_nd.getUTCFullYear(),_nd.getUTCMonth(),_nd.getUTCDate());
+  const tEff=(f<today)?Math.min(t,today):t;
   const occSrc=filteredNoDate().filter(r=>r.status!=='cancelled');
   const occM={}; let occWin=0;
   occSrc.forEach(r=>{let d=new Date(+r.start_date);const nn=+r.no_of_days||0;
-    for(let i=0;i<nn;i++){const ms=d.getTime();const k=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');occM[k]=(occM[k]||0)+1;if(ms>=f&&ms<=t)occWin++;d=new Date(ms+86400000);}});
-  const occPct=avail?Math.round(occWin/avail*100):null;
+    for(let i=0;i<nn;i++){const ms=d.getTime();const k=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');occM[k]=(occM[k]||0)+1;if(ms>=f&&ms<=tEff)occWin++;d=new Date(ms+86400000);}});
+  const occAvail=activeListings()*daysBetween(f,tEff);
+  const occPct=occAvail?Math.round(occWin/occAvail*100):null;
+  const occToDate=(tEff<t); // true when denominator was capped at today
   const kpi=[
     ['Total revenue',nz(rev),n+' bookings','cash','#0f766e','hero'],
     ['Nights booked',nights.toLocaleString(),'','moon','#2563eb'],
-    ['Occupancy rate',occPct!=null?occPct+'%':'—','room-nights in period','gauge','#7c3aed'],
+    ['Occupancy rate',occPct!=null?occPct+'%':'—',occToDate?'room-nights, to date':'room-nights in period','gauge','#7c3aed'],
     ['RevPAR',avail?nz2(rev/avail):'—','rev / avail night','chart','#0f766e'],
     ['ADR (price / night)',n?nz2(rev/nights):'—','','tag','#0891b2'],
     ['Avg booking value',n?nz(rev/n):'—','','receipt','#2563eb'],
