@@ -47,6 +47,11 @@ h1{font-size:20px;margin:0;font-weight:750;letter-spacing:-.01em}
 .cancsum{font-size:13px;margin:2px 0 10px;color:var(--muted2)} .cancsum b{color:var(--ink)}
 .totrow{font-weight:700;background:#eef1f6;color:var(--ink)}
 [data-theme="dark"] .totrow{background:#243044}
+.kpi{cursor:pointer}
+.kpi:after{content:"↧";position:absolute;top:12px;right:12px;font-size:12px;color:var(--muted2);opacity:0;transition:opacity .15s}
+.kpi{position:relative} .kpi:hover:after{opacity:.7}
+.card.flash{animation:flashcard 1.5s ease}
+@keyframes flashcard{0%,100%{box-shadow:var(--sh)}20%,60%{box-shadow:0 0 0 3px var(--accent)}}
 [data-theme="dark"]{--bg:#0f1419;--card:#1a2230;--ink:#e6edf3;--muted2:#93a4b8;--line:#2b3648;
   --sh:0 1px 2px rgba(0,0,0,.35);--sh2:0 6px 16px rgba(0,0,0,.5);}
 [data-theme="dark"] body{background-image:none}
@@ -421,6 +426,14 @@ function initControls(){
   PROPS=[...new Set(ALL.map(r=>r.listing_name))].sort();
   selProps=new Set(PROPS); // Stone & AJC
   buildPropMenu();
+  document.getElementById('kpis').addEventListener('click',e=>{
+    const c=e.target.closest('.kpi'); if(!c)return;
+    const t=c.getAttribute('data-t'); if(!t)return;
+    const el=document.getElementById(t); if(!el)return;
+    const box=el.closest('.card')||el;
+    box.scrollIntoView({behavior:'smooth',block:'center'});
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
+  });
   const chs=[...new Set(ALL.map(r=>r.booking_source))];
   const csel=document.getElementById('channel');
   chs.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=chName(n);csel.appendChild(o);});
@@ -577,11 +590,12 @@ function render(){
     ['Operating margin',rev?Math.round(contribution/rev*100)+'%':'—','after commission & cleaning','percent','#0d9488'],
     ['Net contribution',nz(contribution),'rev − commission − cleaning','cash','#0f766e'],
   ];
+  const KPI_TARGET={'Total revenue':'chMonthly','Nights booked':'chMonthly','Occupancy rate':'chOcc','RevPAR':'chMonthly','ADR (price / night)':'chMarket','Avg booking value':'tblChannel','Avg stay length':'chLen','Avg lead time':'chLead','Guests hosted':'chCreated','Cancellations':'chCancel','Commission saved (direct)':'chDirect','Operating margin':'chMargin','Net contribution':'chMargin'};
   document.getElementById('kpis').innerHTML=kpi.map(k=>{
     const hero=k[5]==='hero';
     const icBg=hero?'':`background:${k[4]}18`;
     const icStroke=hero?'#fff':k[4];
-    return `<div class="kpi${hero?' hero':''}"><div class="top">`+
+    return `<div class="kpi${hero?' hero':''}" data-t="${KPI_TARGET[k[0]]||''}" title="Click to jump to the chart"><div class="top">`+
       `<div class="ic" style="${icBg}"><svg viewBox="0 0 24 24" stroke="${icStroke}">${ICONS[k[3]]||''}</svg></div>`+
       `<div class="lab">${k[0]}</div></div>`+
       `<div class="val">${k[1]}</div><div class="note">${k[2]||'&nbsp;'}</div></div>`;
