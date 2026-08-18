@@ -221,7 +221,7 @@ tbody tr:hover{background:#0f766e08}
       </div>
       <div class="card full">
         <h3>Average occupancy by season</h3>
-        <div class="hint">Southern-Hemisphere seasons — Summer = Dec/Jan/Feb, Winter = Jun/Jul/Aug. Booked nights ÷ available nights, counting only months each property was actually listed. Uses all dates (ignores the date filter); respects property &amp; channel selection.</div>
+        <div class="hint">Southern-Hemisphere seasons — Summer = Dec/Jan/Feb, Winter = Jun/Jul/Aug. Booked nights ÷ available nights, counting only months each property was actually listed. Respects the property, channel &amp; date selection.</div>
         <div class="chartbox"><canvas id="chSeason"></canvas></div>
       </div>
       <div class="card full">
@@ -249,7 +249,7 @@ tbody tr:hover{background:#0f766e08}
     <div class="grid">
       <div class="card full">
         <h3>Revenue by month &amp; month-on-month change</h3>
-        <div class="hint">Data starts Mar 2025 (when PriceLabs tracking began — earlier bookings exist but aren't recorded here). Bars = revenue by check-in month; line = MoM % change. Ignores the date filter; recent/future months are still filling.</div>
+        <div class="hint">Data starts Mar 2025 (when PriceLabs tracking began — earlier bookings exist but aren't recorded here). Bars = revenue by check-in month; line = MoM % change. Respects the property, channel &amp; date filters; recent/future months are still filling.</div>
         <div class="chartbox tall"><canvas id="chTrend"></canvas></div>
       </div>
       <div class="card full">
@@ -609,7 +609,7 @@ function render(){
   drawBar('chLen',nb.map(x=>x[0]),nb.map(x=>x[1]),nb.map(()=>'#8b5cf6'),v=>v+' res');
 
   // seasonal occupancy (all dates, selected properties/channel)
-  const seas=seasonalOccupancy(filteredNoDate());
+  const seas=seasonalOccupancy(filtered());
   const sProps=Object.keys(seas).sort((a,b)=>(seas[b].summer||0)-(seas[a].summer||0));
   drawSeason(sProps.map(shortName),
     sProps.map(p=>seas[p].summer),
@@ -649,7 +649,7 @@ function render(){
   drawYoY(Object.keys(yv).sort(), yv);
 
   // forward booking pace: on the books now vs same time last year (ignores date filter)
-  const bookedAll=filteredNoDate().filter(r=>r.status!=='cancelled');
+  const bookedAll=filtered().filter(r=>r.status!=='cancelled');
   const now=new Date(), curMi=now.getUTCFullYear()*12+now.getUTCMonth();
   const ly=new Date(now); ly.setUTCFullYear(now.getUTCFullYear()-1); const lyMs=ly.getTime();
   const mKey=ms=>{const d=new Date(ms);return d.getUTCFullYear()*12+d.getUTCMonth();};
