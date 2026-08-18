@@ -213,7 +213,7 @@ tbody tr:hover{background:#0f766e08}
       </div>
       <div class="card">
         <h3>Occupancy rate by month</h3>
-        <div class="hint">Booked nights ÷ (active properties × days in month). Approximate.</div>
+        <div class="hint">Room-nights occupied ÷ (active properties × days in month), each stay allocated to the nights it actually covers.</div>
         <div class="chartbox"><canvas id="chOcc"></canvas></div>
       </div>
       <div class="card">
@@ -551,10 +551,16 @@ function render(){
   const commTotal=booked.reduce((s,r)=>s+(+r.rental_revenue||0)*rateFor(r.booking_source),0);
   const cleanTotal=rev*CLEANING_PCT/100;
   const contribution=rev-commTotal-cleanTotal;
+  // accurate occupancy: allocate each booked night to the calendar day it covers (source = property/channel filtered, all dates so stays that span the window boundary count)
+  const occSrc=filteredNoDate().filter(r=>r.status!=='cancelled');
+  const occM={}; let occWin=0;
+  occSrc.forEach(r=>{let d=new Date(+r.start_date);const nn=+r.no_of_days||0;
+    for(let i=0;i<nn;i++){const ms=d.getTime();const k=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');occM[k]=(occM[k]||0)+1;if(ms>=f&&ms<=t)occWin++;d=new Date(ms+86400000);}});
+  const occPct=avail?Math.round(occWin/avail*100):null;
   const kpi=[
     ['Total revenue',nz(rev),n+' bookings','cash','#0f766e','hero'],
     ['Nights booked',nights.toLocaleString(),'','moon','#2563eb'],
-    ['Occupancy rate',avail?Math.round(nights/avail*100)+'%':'—','approx.','gauge','#7c3aed'],
+    ['Occupancy rate',occPct!=null?occPct+'%':'—','room-nights in period','gauge','#7c3aed'],
     ['RevPAR',avail?nz2(rev/avail):'—','rev / avail night','chart','#0f766e'],
     ['ADR (price / night)',n?nz2(rev/nights):'—','','tag','#0891b2'],
     ['Avg booking value',n?nz(rev/n):'—','','receipt','#2563eb'],
@@ -590,9 +596,10 @@ function render(){
   const months=Object.keys(mk).sort();
   drawMonthly(months.map(ymLabel),months.map(k=>Math.round(mk[k].rev)),months.map(k=>mk[k].nights));
 
-  // occupancy by month
-  const occ=months.map(k=>{const[y,m]=k.split('-');const dim=new Date(Date.UTC(+y,+m,0)).getUTCDate();return Math.round(mk[k].nights/(activeListings()*dim)*100);});
-  drawBar('chOcc',months.map(ymLabel),occ,months.map(()=>'#2563eb'),v=>v+'%',100);
+  // occupancy by month (allocated room-nights per calendar month within the window; never exceeds 100%)
+  const occMonths=Object.keys(occM).filter(k=>{const[y,mo]=k.split('-').map(Number);return Date.UTC(y,mo,0)>=f && Date.UTC(y,mo-1,1)<=t;}).sort();
+  const occB=occMonths.map(k=>{const[y,m]=k.split('-').map(Number);const dim=new Date(Date.UTC(y,m,0)).getUTCDate();return Math.round(occM[k]/(activeListings()*dim)*100);});
+  drawBar('chOcc',occMonths.map(ymLabel),occB,occMonths.map(()=>'#2563eb'),v=>v+'%',100);
 
   // created by month (booked_time)
   const ck={};
