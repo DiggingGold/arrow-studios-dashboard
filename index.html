@@ -45,6 +45,8 @@ h1{font-size:20px;margin:0;font-weight:750;letter-spacing:-.01em}
 .tbtn:hover{border-color:var(--accent);color:var(--accent)}
 .controls.collapsed{display:none}
 .cancsum{font-size:13px;margin:2px 0 10px;color:var(--muted2)} .cancsum b{color:var(--ink)}
+.totrow{font-weight:700;background:#eef1f6;color:var(--ink)}
+[data-theme="dark"] .totrow{background:#243044}
 [data-theme="dark"]{--bg:#0f1419;--card:#1a2230;--ink:#e6edf3;--muted2:#93a4b8;--line:#2b3648;
   --sh:0 1px 2px rgba(0,0,0,.35);--sh2:0 6px 16px rgba(0,0,0,.5);}
 [data-theme="dark"] body{background-image:none}
@@ -767,7 +769,7 @@ function fillTable(id,head,rows,total){
   const t=document.getElementById(id);
   t.querySelector('thead').innerHTML='<tr>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>';
   let body=rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
-  if(total)body+='<tr style="font-weight:700;background:#f3f4f6">'+total.map(c=>`<td>${c}</td>`).join('')+'</tr>';
+  if(total)body+='<tr class="totrow">'+total.map(c=>`<td>${c}</td>`).join('')+'</tr>';
   t.querySelector('tbody').innerHTML=body;
 }
 function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
