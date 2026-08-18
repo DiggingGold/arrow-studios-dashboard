@@ -530,7 +530,7 @@ function seasonalOccupancy(rows){
 const sum=(a,k)=>a.reduce((s,r)=>s+(+r[k]||0),0);
 
 function inkLine(){ return document.documentElement.dataset.theme==='dark'?'#e2e8f0':'#1f2937'; }
-function applyChartTheme(dark){ if(typeof Chart!=='undefined'){ Chart.defaults.color=dark?'#93a4b8':'#52514e'; Chart.defaults.borderColor=dark?'#2b3648':'#e1e0d9'; } }
+function applyChartTheme(dark){ if(typeof Chart!=='undefined'){ Chart.defaults.color=dark?'#f1f5f9':'#334155'; Chart.defaults.borderColor=dark?'#334155':'#e1e0d9'; } }
 function toggleTheme(){ const dark=document.documentElement.dataset.theme!=='dark'; document.documentElement.dataset.theme=dark?'dark':'light'; const b=document.getElementById('themeToggle'); if(b)b.textContent=dark?'Light':'Dark'; render(); }
 function toggleFilters(){ const c=document.querySelector('.controls'); const hidden=c.classList.toggle('collapsed'); const b=document.getElementById('filterToggle'); if(b)b.textContent=hidden?'Show filters':'Hide filters'; }
 function render(){
