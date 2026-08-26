@@ -970,5 +970,27 @@ function drawMonthly(labels,rev,nights){
   }
 })();
 </script>
+<style>
+.gfxtop{position:absolute;top:12px;right:14px;font-size:11px;font-weight:600;color:var(--muted2,#93a4b8);
+  text-decoration:none;opacity:.8;border:1px solid var(--line,#2b3648);border-radius:999px;padding:3px 10px;
+  background:var(--card,#1a2230);transition:all .15s;z-index:6;line-height:1.4}
+.gfxtop:hover{opacity:1;color:var(--accent,#2dd4bf);border-color:var(--accent,#2dd4bf)}
+</style>
+<script>
+(function(){function add(){
+  var have=document.getElementById('kpis')||document.querySelector('.kpis');
+  document.querySelectorAll('.card').forEach(function(card){
+    if(!card.querySelector('canvas'))return;
+    if(card.querySelector(':scope > .gfxtop'))return;
+    if(getComputedStyle(card).position==='static')card.style.position='relative';
+    var a=document.createElement('a');a.href='#';a.className='gfxtop';a.textContent='↑ Top';
+    a.addEventListener('click',function(e){e.preventDefault();
+      (document.getElementById('kpis')||document.querySelector('.kpis')||document.body).scrollIntoView({behavior:'smooth',block:'start'});});
+    card.appendChild(a);
+  });}
+  if(document.readyState!=='loading')setTimeout(add,250);else document.addEventListener('DOMContentLoaded',function(){setTimeout(add,250);});
+})();
+</script>
 </body>
+
 </html>
