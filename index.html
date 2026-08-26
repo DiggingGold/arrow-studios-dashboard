@@ -319,6 +319,20 @@ tbody tr:hover{background:#0f766e08}
       </div>
     </div>
 
+    <div class="sec"><span>2025 vs 2026 — growth</span></div>
+    <div class="grid">
+      <div class="card full">
+        <h3>Revenue by month — 2025 vs 2026</h3>
+        <div class="hint" id="cmpHintPerf">Year-on-year by calendar month.</div>
+        <div class="chartbox tall"><canvas id="chCmpPerf"></canvas></div>
+      </div>
+      <div class="card full">
+        <h3>Direct (commission-free) bookings by month — 2025 vs 2026</h3>
+        <div class="hint" id="cmpDirHint">Website / direct revenue, year-on-year.</div>
+        <div class="chartbox tall"><canvas id="chCmpDir"></canvas></div>
+      </div>
+    </div>
+
     <div class="foot"><span id="footnote" style="display:block;color:var(--accent);font-weight:600;margin-bottom:8px"></span>Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so "Guests hosted" is shown as reservation count. Cancellations are sourced from your Booking.com extranet export (PriceLabs does not sync cancellations); they'll switch to live PriceLabs data automatically if that sync is fixed.</div>
   </div>
 
@@ -537,7 +551,9 @@ function render(){
   const f=new Date(document.getElementById('from').value+'T00:00:00Z').getTime();
   const t=new Date(document.getElementById('to').value+'T00:00:00Z').getTime();
   const avail=activeListings()*daysBetween(f,t);
-  const directRev=booked.filter(r=>DIRECT_SOURCES.has(r.booking_source)).reduce((s,r)=>s+(+r.rental_revenue||0),0);
+  const directBk=booked.filter(r=>DIRECT_SOURCES.has(r.booking_source));
+  const directRev=directBk.reduce((s,r)=>s+(+r.rental_revenue||0),0);
+  const directN=directBk.length, directPct=rev?Math.round(directRev/rev*100):0;
   const commSaved=directRev*0.15;
   const cxAll=EMBEDDED_CANCELLATIONS.filter(x=>selProps.has(x.name)&&x.arr>=f&&x.arr<=t);
   const cxVal=cxAll.reduce((s,x)=>s+(+x.val||0),0);
@@ -567,10 +583,11 @@ function render(){
     ['Guests hosted',n.toLocaleString(),'reservations*','users','#db2777'],
     ['Cancellations',cxAll.length?cxAll.length.toLocaleString():'0',cxAll.length?(nz(cxVal)+' lost (B.com)'):'none in range','x','#dc2626'],
     ['Commission saved (direct)',nz(commSaved),nz(directRev)+' direct rev','gift','#16a34a','hero'],
+    ['Direct bookings',directN.toLocaleString(),directPct+'% of revenue · commission-free','users','#16a34a'],
     ['Operating margin',rev?Math.round(contribution/rev*100)+'%':'—','after commission & cleaning','percent','#0d9488'],
     ['Net contribution',nz(contribution),'rev − commission − cleaning','cash','#0f766e'],
   ];
-  const KPI_TARGET={'Total revenue':'chMonthly','Nights booked':'chMonthly','Occupancy rate':'chOcc','RevPAR':'chMonthly','ADR (price / night)':'chMarket','Avg booking value':'tblChannel','Avg stay length':'chLen','Avg lead time':'chLead','Guests hosted':'chCreated','Cancellations':'chCancel','Commission saved (direct)':'chDirect','Operating margin':'chMargin','Net contribution':'chMargin'};
+  const KPI_TARGET={'Total revenue':'chMonthly','Nights booked':'chMonthly','Occupancy rate':'chOcc','RevPAR':'chMonthly','ADR (price / night)':'chMarket','Avg booking value':'tblChannel','Avg stay length':'chLen','Avg lead time':'chLead','Guests hosted':'chCreated','Cancellations':'chCancel','Commission saved (direct)':'chDirect','Direct bookings':'chDirect','Operating margin':'chMargin','Net contribution':'chMargin'};
   document.getElementById('kpis').innerHTML=kpi.map(k=>{
     const hero=k[5]==='hero';
     const icBg=hero?'':`background:${k[4]}18`;
@@ -989,6 +1006,50 @@ function drawMonthly(labels,rev,nights){
     card.appendChild(a);
   });}
   if(document.readyState!=='loading')setTimeout(add,250);else document.addEventListener('DOMContentLoaded',function(){setTimeout(add,250);});
+})();
+</script>
+<script>
+(function(){function add(){
+  try{
+    if(typeof EMBEDDED_DATA==='undefined'||!document.getElementById('chCmpPerf'))return;
+    var allow=(typeof ALLOWED!=='undefined'&&ALLOWED&&ALLOWED.has)?ALLOWED:null;
+    var dir=(typeof DIRECT_SOURCES!=='undefined')?DIRECT_SOURCES:new Set(['Manual','OH']);
+    var snap=(typeof SNAPSHOT_DATE!=='undefined')?Date.parse(SNAPSHOT_DATE+'T23:59:59Z'):Date.parse('2026-08-26T23:59:59Z');
+    var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function blank(){return [Array(12).fill(0),Array(12).fill(0),Array(12).fill(0)];}
+    var T=blank(), Dd=blank();
+    EMBEDDED_DATA.forEach(function(r){
+      if(allow&&!allow.has(r.listing_name))return;
+      var nn=r.no_of_days||0; if(nn<=0)return; var per=r.rental_revenue/nn, isDir=dir.has(r.booking_source);
+      for(var i=0;i<nn;i++){var t=r.start_date+i*86400000,d=new Date(t),yy=d.getUTCFullYear(),mo=d.getUTCMonth();
+        function put(A){ if(yy===2025)A[0][mo]+=per; else if(yy===2026){ if(t>snap)A[2][mo]+=per; else A[1][mo]+=per; } }
+        put(T); if(isDir) put(Dd);
+      }
+    });
+    var fmt=(typeof nz==='function')?nz:function(v){return '$'+Math.round(v).toLocaleString('en-NZ');};
+    var sum=function(a){return a.reduce(function(s,v){return s+(v||0);},0);};
+    var lightT=(document.documentElement.dataset&&document.documentElement.dataset.theme==='light');
+    var ink=lightT?'#0f1826':'#e6edf3',grid='#2b364855';
+    function totals(A){var a25=sum(A[0]),a26=sum(A[1])+sum(A[2]);return [a25,a26,a25>0?Math.round((a26/a25-1)*100):null];}
+    function draw(id,A,ca,cf){
+      new Chart(document.getElementById(id),{type:'bar',data:{labels:MO,datasets:[
+        {label:'2025',data:A[0].map(Math.round),backgroundColor:'#64748b',borderRadius:3,stack:'a'},
+        {label:'2026 · actual',data:A[1].map(Math.round),backgroundColor:ca,borderRadius:3,stack:'b'},
+        {label:'2026 · forward booked',data:A[2].map(Math.round),backgroundColor:cf,borderRadius:3,stack:'b'}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12,color:ink}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.y);}}}},
+        scales:{x:{stacked:true,grid:{display:false},ticks:{color:ink}},y:{stacked:true,grid:{color:grid},ticks:{color:ink,callback:function(v){return '$'+(v/1000)+'k';}}}}}});
+    }
+    var tt=totals(T), dt=totals(Dd);
+    var h1=document.getElementById('cmpHintPerf');
+    if(h1)h1.innerHTML='Full-year revenue: <b>'+fmt(tt[0])+'</b> (2025) → <b>'+fmt(tt[1])+'</b> (2026'+(tt[2]!=null?', <b>+'+tt[2]+'%</b>':'')+'). 2025 was a partial ramp year (AJC only, from March; Stone Cottage launched Dec 2025); lighter 2026 bars are confirmed forward bookings.';
+    var h2=document.getElementById('cmpDirHint');
+    if(h2)h2.innerHTML='Commission-free (website / direct) revenue: <b>'+fmt(dt[0])+'</b> (2025) → <b>'+fmt(dt[1])+'</b> (2026'+(dt[2]!=null?', <b>+'+dt[2]+'%</b>':'')+'). Watch direct climb as OTA dependence falls.';
+    draw('chCmpPerf',T,'#2dd4bf','#2dd4bf55');
+    draw('chCmpDir',Dd,'#16a34a','#16a34a66');
+  }catch(e){console.error('cmpPerf',e);}
+}
+if(document.readyState!=='loading')setTimeout(add,350);else document.addEventListener('DOMContentLoaded',function(){setTimeout(add,350);});
 })();
 </script>
 </body>
