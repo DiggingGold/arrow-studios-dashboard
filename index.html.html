@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Arrow Studios - Performance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0b1220; --card:#141c2e; --card-hi:#0f766e; --border:#1f2a40;
+  --text:#e6edf7; --muted:#94a3b8; --teal:#2dd4bf; --teal-dk:#0f766e;
+  --red:#f87171; --green:#4ade80; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f5f7fb; --card:#ffffff; --card-hi:#0f766e; --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f5f7fb; --card:#ffffff; --card-hi:#0f766e; --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);}
+.wrap{max-width:1400px;margin:0 auto;padding:24px 28px 60px;}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;}
+.logo{width:44px;height:44px;border-radius:10px;background:var(--teal-dk);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+.title-block{flex:1;min-width:200px;}
+.title-block h1{margin:0;font-size:21px;}
+.title-block p{margin:2px 0 0;color:var(--muted);font-size:13px;}
+.top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;}
+.badge{background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.35);color:var(--teal);padding:7px 12px;border-radius:8px;font-size:13px;}
+.filters{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;margin-bottom:22px;}
+.filters label{display:block;font-size:11px;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;text-transform:uppercase;}
+.filters input,.filters select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:7px;font-size:13px;}
+.presets{display:flex;gap:8px;margin-left:auto;}
+.preset{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;}
+.preset.active{background:var(--teal-dk);border-color:var(--teal-dk);color:#fff;}
+.section-hdr{display:flex;align-items:center;gap:8px;margin:34px 0 14px;}
+.section-hdr .bar{width:4px;height:16px;background:var(--teal);border-radius:2px;}
+.section-hdr h2{margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr);}}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;min-height:96px;}
+.tile.hi{background:linear-gradient(135deg,var(--teal-dk),#0b5c56);border-color:var(--teal-dk);}
+.tile .lbl{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.03em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.tile.hi .lbl{color:rgba(255,255,255,.85);}
+.tile .val{font-size:24px;font-weight:700;}
+.tile.hi .val{color:#fff;}
+.tile .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.tile.hi .sub{color:rgba(255,255,255,.75);}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.cards2{grid-template-columns:1fr;}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.card h3{margin:0 0 4px;font-size:15px;}
+.card .desc{color:var(--muted);font-size:12.5px;margin:0 0 12px;}
+.card .top-link{float:right;font-size:11px;color:var(--muted);text-decoration:none;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border);}
+td{padding:9px 10px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;font-weight:700;}
+canvas{max-height:280px;}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.6;}
+.pos{color:var(--green);} .neg{color:var(--red);}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">AS</div>
+    <div class="title-block">
+      <h1>Arrow Studios &ndash; Performance</h1>
+      <p>PriceLabs data &middot; Stone Cottage &amp; AJC</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="themeBtn" onclick="toggleTheme()">Light</button>
+      <span class="badge">Snapshot &middot; as of 2026-09-15</span>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div><label>From (check-in)</label><input type="date" id="fFrom"></div>
+    <div><label>To (check-in)</label><input type="date" id="fTo"></div>
+    <div><label>Property</label>
+      <select id="fProp"><option value="all">All properties</option><option value="Stone Cottage">Stone Cottage</option><option value="Arrow Junction Cottage">Arrow Junction Cottage</option></select>
+    </div>
+    <div><label>Channel</label>
+      <select id="fChan"><option value="all">All channels</option><option value="Booking.com">Booking.com</option><option value="Airbnb">Airbnb</option><option value="Other (OH)">Other (OH)</option><option value="Direct / Manual">Direct / Manual</option></select>
+    </div>
+    <div class="presets">
+      <button class="preset" onclick="setPreset('ytd')">YTD</button>
+      <button class="preset" onclick="setPreset('last12')">Last 12 mo</button>
+      <button class="preset active" id="presetUpcoming" onclick="setPreset('upcoming')">Upcoming</button>
+      <button class="preset" onclick="setPreset('all')">All time</button>
+    </div>
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Overview</h2></div>
+  <div id="overviewTiles">
+
+<div class="grid">
+  <div class="tile hi"><div class="lbl">Total Revenue</div><div class="val">$90,426</div><div class="sub">45 bookings</div></div>
+  <div class="tile"><div class="lbl">Nights Booked</div><div class="val">174</div><div class="sub">&nbsp;</div></div>
+  <div class="tile"><div class="lbl">Occupancy Rate</div><div class="val">24%</div><div class="sub">room-nights in period</div></div>
+  <div class="tile"><div class="lbl">RevPAR</div><div class="val">$123.87</div><div class="sub">rev / avail night</div></div>
+  <div class="tile"><div class="lbl">ADR (price / night)</div><div class="val">$519.69</div><div class="sub">&nbsp;</div></div>
+  <div class="tile"><div class="lbl">Avg Booking Value</div><div class="val">$2,009</div><div class="sub">&nbsp;</div></div>
+  <div class="tile"><div class="lbl">Avg Stay Length</div><div class="val">3.87 nts</div><div class="sub">&nbsp;</div></div>
+  <div class="tile"><div class="lbl">Avg Lead Time</div><div class="val">147 days</div><div class="sub">booking&rarr;check-in</div></div>
+  <div class="tile"><div class="lbl">Guests Hosted</div><div class="val">45</div><div class="sub">reservations*</div></div>
+  <div class="tile"><div class="lbl">Cancellations</div><div class="val">12</div><div class="sub">$23,603 lost (in-period)</div></div>
+  <div class="tile hi"><div class="lbl">Commission Saved (Direct)</div><div class="val">$166</div><div class="sub">$1,070 direct rev</div></div>
+  <div class="tile"><div class="lbl">Direct Bookings</div><div class="val">1</div><div class="sub">1.2% of revenue &middot; commission-free</div></div>
+  <div class="tile"><div class="lbl">Operating Margin</div><div class="val">65%</div><div class="sub">after commission &amp; cleaning</div></div>
+  <div class="tile"><div class="lbl">Net Contribution</div><div class="val">$58,838</div><div class="sub">rev &minus; commission &minus; cleaning</div></div>
+</div>
+
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Property Summary</h2></div>
+  <div class="card">
+    <h3>Per-property performance</h3>
+    <p class="desc">Revenue, nights, reservations, ADR and average stay for the selected range.</p>
+    <table id="propTable"><thead><tr><th>Property</th><th>Revenue</th><th>Nights</th><th>Res</th><th>ADR</th><th>Avg Stay</th></tr></thead><tbody>
+<tr><td>Stone Cottage</td><td>$50,599</td><td>95</td><td>23</td><td>$532.62</td><td>4.1 nts</td></tr>
+<tr><td>Arrow Junction Cottage</td><td>$39,826</td><td>79</td><td>22</td><td>$504.13</td><td>3.6 nts</td></tr>
+<tr><td>Total</td><td>$90,426</td><td>174</td><td>45</td><td>$519.69</td><td>3.9 nts</td></tr>
+
+    </tbody></table>
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Annual &amp; Quarterly Comparison &middot; all properties, all channels, all-time</h2></div>
+  <div class="cards2">
+    <div class="card"><h3>Quarterly revenue by year</h3><p class="desc">Revenue by quarter across the full booking history to date.</p><canvas id="chartQuarterly"></canvas></div>
+    <div class="card"><h3>Annual revenue</h3><p class="desc">Total revenue by calendar year of check-in (2027 still filling).</p><canvas id="chartAnnual"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <h3>Annual summary</h3>
+    <p class="desc">Revenue, costs and cost-to-income % per year, plus nights, ADR and YoY revenue. Costs = platform commission + cleaning (modelled 20%); full overheads &amp; mortgage are in the private P&amp;L, not shown here.</p>
+    <table><thead><tr><th>Year</th><th>Revenue</th><th>Costs</th><th>Cost:Income</th><th>Nights</th><th>ADR</th><th>YoY Rev</th></tr></thead><tbody>
+<tr><td>2025</td><td>$53,561</td><td>$18,221</td><td>34%</td><td>210</td><td>$255.05</td><td>—</td></tr>
+<tr><td>2026</td><td>$176,339</td><td>$60,127</td><td>34%</td><td>459</td><td>$384.18</td><td><span class='pos'>+229%</span></td></tr>
+<tr><td>2027</td><td>$39,352</td><td>$13,786</td><td>35%</td><td>65</td><td>$605.42</td><td><span class='neg'>-78%</span></td></tr>
+<tr><td>All years</td><td>$269,252</td><td>$92,134</td><td>34%</td><td>734</td><td>$366.83</td><td>—</td></tr>
+
+    </tbody></table>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <h3>Cost vs income by quarter</h3>
+    <p class="desc">Each quarter's revenue split into costs (commission + cleaning) and net income; the line is cost-to-income %.</p>
+    <canvas id="chartCostIncome"></canvas>
+    <table style="margin-top:14px;"><thead><tr><th>Quarter</th><th>Revenue</th><th>Costs</th><th>Cost:Income</th></tr></thead><tbody>
+<tr><td>2025-Q1</td><td>$5,264</td><td>$1,842</td><td>35%</td></tr>
+<tr><td>2025-Q2</td><td>$12,379</td><td>$4,333</td><td>35%</td></tr>
+<tr><td>2025-Q3</td><td>$11,429</td><td>$4,000</td><td>35%</td></tr>
+<tr><td>2025-Q4</td><td>$24,488</td><td>$8,045</td><td>33%</td></tr>
+<tr><td>2026-Q1</td><td>$55,656</td><td>$19,480</td><td>35%</td></tr>
+<tr><td>2026-Q2</td><td>$29,487</td><td>$9,250</td><td>31%</td></tr>
+<tr><td>2026-Q3</td><td>$47,050</td><td>$16,032</td><td>34%</td></tr>
+<tr><td>2026-Q4</td><td>$44,146</td><td>$15,365</td><td>35%</td></tr>
+<tr><td>2027-Q1</td><td>$32,257</td><td>$11,303</td><td>35%</td></tr>
+<tr><td>2027-Q2</td><td>$6,185</td><td>$2,165</td><td>35%</td></tr>
+<tr><td>2027-Q3</td><td>$910</td><td>$319</td><td>35%</td></tr>
+<tr><td>All quarters</td><td>$269,252</td><td>$92,134</td><td>34%</td></tr>
+
+    </tbody></table>
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Revenue &amp; Occupancy &middot; all-time</h2></div>
+  <div class="card"><h3>Revenue by month</h3><p class="desc">By check-in month, full booking history. Bars = revenue.</p><canvas id="chartMonthly"></canvas></div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Channels &amp; Direct Bookings</h2></div>
+  <div class="cards2">
+    <div class="card"><h3>Revenue by channel</h3><p class="desc">All-time booking revenue split by source.</p><canvas id="chartChannelRev"></canvas></div>
+    <div class="card"><h3>Nights per channel</h3><p class="desc">All-time nights booked broken down by source.</p><canvas id="chartChannelNights"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:16px;">
+    <h3>Channel summary &middot; selected range</h3>
+    <p class="desc">Per-channel revenue, nights, reservations, ADR and average booking value.</p>
+    <table id="chanTable"><thead><tr><th>Channel</th><th>Revenue</th><th>Nights</th><th>Res</th><th>ADR</th><th>Avg Booking</th></tr></thead><tbody>
+<tr><td>Booking.com</td><td>$79,404</td><td>151</td><td>38</td><td>$525.85</td><td>$2,090</td></tr>
+<tr><td>Airbnb</td><td>$9,952</td><td>21</td><td>6</td><td>$473.90</td><td>$1,659</td></tr>
+<tr><td>Other (OH)</td><td>$1,070</td><td>2</td><td>1</td><td>$535.00</td><td>$1,070</td></tr>
+<tr><td>Total</td><td>$90,426</td><td>174</td><td>45</td><td>$519.69</td><td>$2,009</td></tr>
+
+    </tbody></table>
+  </div>
+  <div class="card" style="margin-top:16px;"><h3>Operating margin by property &middot; all-time</h3><p class="desc">Where each property's revenue goes: platform commission and cleaning (both modelled), leaving net contribution. Excludes fixed overheads.</p><canvas id="chartMarginProp"></canvas></div>
+  <div class="card" style="margin-top:16px;"><h3>Direct booking share over time &middot; all-time</h3><p class="desc">Commission-free (direct + OH) revenue as a % of total, by check-in month.</p><canvas id="chartDirectShare"></canvas></div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Guest &amp; Booking Behaviour &middot; all-time</h2></div>
+  <div class="cards2">
+    <div class="card"><h3>Booking lead time</h3><p class="desc">Days between booking made and check-in.</p><canvas id="chartLeadTime"></canvas></div>
+    <div class="card"><h3>Reservation length</h3><p class="desc">Distribution of stay lengths (nights).</p><canvas id="chartStayLength"></canvas></div>
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>Cancellations &middot; live PriceLabs data, all channels, all-time</h2></div>
+  <div class="card">
+    <h3>Cancellations by property</h3>
+    <p class="desc">Count and lost revenue per property, now sourced directly from PriceLabs (the earlier Lodgify status-mapping bug, PriceLabs ticket #941037, was fixed in Sept 2026).</p>
+    <table><thead><tr><th>Property</th><th>Cancellations</th><th>Lost Revenue</th></tr></thead><tbody>
+<tr><td>Stone Cottage</td><td>31</td><td>$55,952</td></tr>
+<tr><td>Arrow Junction Cottage</td><td>39</td><td>$54,082</td></tr>
+<tr><td>Total</td><td>70</td><td>$110,034</td></tr>
+
+    </tbody></table>
+  </div>
+
+  <div class="section-hdr"><div class="bar"></div><h2>2025 vs 2026 &middot; Growth</h2></div>
+  <div class="cards2">
+    <div class="card">
+      <h3>Full-year revenue</h3>
+      <p class="desc">$53,561 (2025) &rarr; $176,339 (2026, <span class="pos">+229%</span>). 2025 was a partial ramp year (AJC only from March; Stone Cottage launched Dec 2025).</p>
+      <canvas id="chartGrowthRev"></canvas>
+    </div>
+    <div class="card">
+      <h3>Direct (commission-free) revenue</h3>
+      <p class="desc">$3,505 (2025) &rarr; $11,586 (2026, <span class="pos">+231%</span>). Watch direct climb as OTA dependence falls.</p>
+      <canvas id="chartGrowthDirect"></canvas>
+    </div>
+  </div>
+
+  <footer>
+    This dashboard is a manually-refreshed snapshot as of 2026-09-15, in NZD &mdash; the automated daily refresh that normally regenerates this page appears to have stopped; see your Claude conversation for details.<br>
+    Occupancy is an approximation (Lodgify computes it from a live calendar). Guest headcount isn't exposed by the data source, so &quot;Guests hosted&quot; is shown as reservation count.
+  </footer>
+</div>
+
+<script>
+const RESERVATIONS = [{"p":"Arrow Junction Cottage","c":"Airbnb","s":"cancelled","d":1818547200000,"n":5,"rev":2497.0,"lt":338},{"p":"Stone Cottage","c":"Airbnb","s":"cancelled","d":1818547200000,"n":5,"rev":2466.0,"lt":338},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1792540800000,"n":2,"rev":880.0,"lt":37},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"booked","d":1789862400000,"n":4,"rev":1200.0,"lt":8},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1803600000000,"n":4,"rev":2356.24,"lt":167},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1799280000000,"n":3,"rev":2150.0,"lt":117},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1798156800000,"n":2,"rev":1797.35,"lt":106},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1794268800000,"n":2,"rev":1310.0,"lt":61},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1795392000000,"n":2,"rev":859.0,"lt":76},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1800576000000,"n":3,"rev":1700.0,"lt":137},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1801872000000,"n":2,"rev":1305.0,"lt":153},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"booked","d":1796947200000,"n":2,"rev":859.0,"lt":97},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1798675200000,"n":1,"rev":1181.74,"lt":119},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1795219200000,"n":10,"rev":4008.64,"lt":80},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1791072000000,"n":7,"rev":3850.0,"lt":33},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1799366400000,"n":2,"rev":930.64,"lt":130},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1787961600000,"n":2,"rev":637.24,"lt":4},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1796774400000,"n":2,"rev":724.1,"lt":106},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1803859200000,"n":2,"rev":1330.0,"lt":191},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1798675200000,"n":1,"rev":1316.74,"lt":132},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1802908800000,"n":3,"rev":2222.58,"lt":184},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1797120000000,"n":10,"rev":5560.0,"lt":117},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1792713600000,"n":2,"rev":880.0,"lt":66},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1802995200000,"n":3,"rev":2805.0,"lt":186},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1799798400000,"n":4,"rev":1813.55,"lt":151},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1807401600000,"n":2,"rev":975.19,"lt":242},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1816128000000,"n":2,"rev":910.39,"lt":344},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"booked","d":1798502400000,"n":2,"rev":2340.0,"lt":141},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1799625600000,"n":2,"rev":1245.0,"lt":156},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1790208000000,"n":3,"rev":873.95,"lt":50},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1798761600000,"n":4,"rev":3672.5,"lt":150},{"p":"Arrow Junction Cottage","c":"Other (OH)","s":"booked","d":1787788800000,"n":2,"rev":733.5,"lt":23},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1790121600000,"n":3,"rev":1325.0,"lt":51},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1790640000000,"n":2,"rev":744.34,"lt":57},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1803513600000,"n":4,"rev":3735.0,"lt":208},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1788134400000,"n":3,"rev":825.34,"lt":31},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1788307200000,"n":3,"rev":1165.0,"lt":35},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1790812800000,"n":4,"rev":1489.55,"lt":67},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1811203200000,"n":2,"rev":880.0,"lt":305},{"p":"Arrow Junction Cottage","c":"Other (OH)","s":"booked","d":1786579200000,"n":7,"rev":2051.1,"lt":21},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1788134400000,"n":3,"rev":829.39,"lt":46},{"p":"Arrow Junction Cottage","c":"Other (OH)","s":"booked","d":1785024000000,"n":2,"rev":594.0,"lt":11},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1787616000000,"n":3,"rev":1335.0,"lt":42},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"booked","d":1783987200000,"n":2,"rev":594.0,"lt":4},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1783728000000,"n":3,"rev":1215.0,"lt":1},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1795046400000,"n":3,"rev":1185.8,"lt":134},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1794182400000,"n":5,"rev":2745.04,"lt":125},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1790812800000,"n":2,"rev":1260.0,"lt":88},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1793664000000,"n":3,"rev":906.34,"lt":123},{"p":"Stone Cottage","c":"Direct / Manual","s":"cancelled","d":1783382400000,"n":4,"rev":2315.0,"lt":10},{"p":"Stone Cottage","c":"Direct / Manual","s":"cancelled","d":1783382400000,"n":4,"rev":2615.0,"lt":10},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1786060800000,"n":2,"rev":675.49,"lt":43},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1788998400000,"n":7,"rev":2319.77,"lt":78},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1808524800000,"n":8,"rev":4330.0,"lt":309},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1785974400000,"n":3,"rev":1335.0,"lt":53},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1781740800000,"n":4,"rev":695.75,"lt":4},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1782345600000,"n":4,"rev":920.76,"lt":12},{"p":"Arrow Junction Cottage","c":"Other (OH)","s":"booked","d":1794787200000,"n":2,"rev":1070.0,"lt":159},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1782864000000,"n":5,"rev":1298.75,"lt":23},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1791763200000,"n":9,"rev":3389.0,"lt":129},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1787184000000,"n":2,"rev":594.5,"lt":76},{"p":"Stone Cottage","c":"Airbnb","s":"booked","d":1788652800000,"n":4,"rev":1665.0,"lt":95},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1788393600000,"n":4,"rev":887.71,"lt":93},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1792454400000,"n":3,"rev":738.04,"lt":143},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1784073600000,"n":4,"rev":1752.75,"lt":46},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1804723200000,"n":3,"rev":1120.55,"lt":285},{"p":"Stone Cottage","c":"Other (OH)","s":"booked","d":1782604800000,"n":5,"rev":1832.0,"lt":29},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1784851200000,"n":3,"rev":633.37,"lt":56},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1784419200000,"n":4,"rev":1413.6,"lt":52},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1785456000000,"n":4,"rev":932.26,"lt":65},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1783555200000,"n":5,"rev":1327.54,"lt":44},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1791590400000,"n":3,"rev":600.17,"lt":138},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1780099200000,"n":3,"rev":620.14,"lt":5},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1786665600000,"n":3,"rev":720.03,"lt":82},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1793923200000,"n":3,"rev":1525.0,"lt":171},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1790467200000,"n":4,"rev":1881.0,"lt":133},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1788307200000,"n":3,"rev":1292.0,"lt":110},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1787443200000,"n":4,"rev":1202.0,"lt":100},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1790553600000,"n":9,"rev":3548.74,"lt":136},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1787875200000,"n":4,"rev":1719.5,"lt":107},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1800748800000,"n":12,"rev":5870.76,"lt":260},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1785369600000,"n":4,"rev":1662.5,"lt":82},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1783382400000,"n":6,"rev":3196.75,"lt":59},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1789516800000,"n":7,"rev":2783.5,"lt":134},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1794960000000,"n":4,"rev":2150.0,"lt":198},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1785369600000,"n":4,"rev":1738.5,"lt":91},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1777420800000,"n":3,"rev":830.74,"lt":1},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1785801600000,"n":7,"rev":2360.3,"lt":99},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1782345600000,"n":3,"rev":1010.8,"lt":59},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1796256000000,"n":6,"rev":3065.0,"lt":220},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1791331200000,"n":4,"rev":1738.5,"lt":164},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1779926400000,"n":4,"rev":1288.21,"lt":34},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1783036800000,"n":6,"rev":2445.34,"lt":71},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1784505600000,"n":4,"rev":1327.54,"lt":90},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1781827200000,"n":3,"rev":997.5,"lt":67},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1782345600000,"n":10,"rev":3240.77,"lt":73},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1780704000000,"n":3,"rev":983.24,"lt":55},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1778889600000,"n":4,"rev":1310.99,"lt":39},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1779408000000,"n":3,"rev":983.24,"lt":54},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1777420800000,"n":4,"rev":1405.0,"lt":32},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1780444800000,"n":3,"rev":983.24,"lt":73},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1797206400000,"n":5,"rev":2860.0,"lt":268},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1783123200000,"n":3,"rev":1420.24,"lt":107},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1781136000000,"n":4,"rev":1320.5,"lt":86},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1775692800000,"n":3,"rev":1285.0,"lt":29},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1777334400000,"n":3,"rev":1155.0,"lt":48},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1775692800000,"n":3,"rev":1199.74,"lt":32},{"p":"Arrow Junction Cottage","c":"Direct / Manual","s":"booked","d":1775001600000,"n":7,"rev":3905.74,"lt":37},{"p":"Arrow Junction Cottage","c":"Direct / Manual","s":"cancelled","d":1775001600000,"n":7,"rev":3905.74,"lt":37},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1784937600000,"n":5,"rev":2261.01,"lt":153},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1783814400000,"n":6,"rev":3747.74,"lt":140},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1777334400000,"n":3,"rev":1130.0,"lt":72},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1781740800000,"n":3,"rev":1083.0,"lt":124},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1775520000000,"n":3,"rev":1625.0,"lt":52},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1778371200000,"n":4,"rev":1310.99,"lt":92},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1798675200000,"n":4,"rev":3386.74,"lt":330},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1770422400000,"n":3,"rev":1185.0,"lt":4},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1789084800000,"n":4,"rev":1762.25,"lt":222},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1769644800000,"n":4,"rev":1535.0,"lt":5},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1780012800000,"n":4,"rev":1420.24,"lt":132},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1776384000000,"n":3,"rev":1295.0,"lt":92},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1776988800000,"n":3,"rev":1305.0,"lt":99},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1786838400000,"n":7,"rev":3548.26,"lt":214},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1771113600000,"n":3,"rev":2365.0,"lt":34},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1769212800000,"n":4,"rev":1380.0,"lt":16},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1768003200000,"n":3,"rev":1078.26,"lt":3},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1789689600000,"n":5,"rev":1398.38,"lt":254},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1786406400000,"n":5,"rev":1866.96,"lt":217},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1775520000000,"n":4,"rev":1604.35,"lt":92},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1776038400000,"n":4,"rev":1455.65,"lt":99},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1777766400000,"n":7,"rev":1753.04,"lt":122},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1770076800000,"n":3,"rev":903.91,"lt":33},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1773619200000,"n":3,"rev":825.65,"lt":76},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1792972800000,"n":7,"rev":2282.61,"lt":303},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1770681600000,"n":4,"rev":1404.35,"lt":48},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1774310400000,"n":3,"rev":917.39,"lt":90},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1768003200000,"n":4,"rev":1357.03,"lt":19},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1766534400000,"n":4,"rev":1792.17,"lt":2},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1769558400000,"n":3,"rev":891.3,"lt":45},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1768694400000,"n":3,"rev":847.83,"lt":36},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1768435200000,"n":3,"rev":1007.62,"lt":38},{"p":"Stone Cottage","c":"Airbnb","s":"cancelled","d":1766620800000,"n":3,"rev":1990.0,"lt":19},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1777248000000,"n":5,"rev":1533.1,"lt":143},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1766793600000,"n":3,"rev":1913.04,"lt":24},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"cancelled","d":1765497600000,"n":10,"rev":0.0,"lt":11},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1769990400000,"n":5,"rev":1691.3,"lt":64},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"cancelled","d":1766793600000,"n":3,"rev":0.0,"lt":27},{"p":"Arrow Junction Cottage","c":"Airbnb","s":"cancelled","d":1767052800000,"n":5,"rev":0.0,"lt":31},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1775606400000,"n":8,"rev":3243.48,"lt":133},{"p":"Arrow Junction Cottage","c":"Direct / Manual","s":"booked","d":1766102400000,"n":3,"rev":1640.0,"lt":30},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1766534400000,"n":4,"rev":2539.13,"lt":44},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1769904000000,"n":3,"rev":802.15,"lt":84},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1773705600000,"n":3,"rev":805.5,"lt":128},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1762646400000,"n":3,"rev":664.02,"lt":2},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1773273600000,"n":4,"rev":1192.89,"lt":125},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1771372800000,"n":3,"rev":1165.01,"lt":110},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1761782400000,"n":3,"rev":623.6,"lt":2},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1768953600000,"n":3,"rev":950.87,"lt":89},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1771027200000,"n":3,"rev":980.67,"lt":115},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1770336000000,"n":3,"rev":947.58,"lt":110},{"p":"Stone Cottage","c":"Direct / Manual","s":"booked","d":1766188800000,"n":4,"rev":1865.0,"lt":65},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1763337600000,"n":3,"rev":783.11,"lt":33},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1773964800000,"n":6,"rev":1630.05,"lt":158},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1788652800000,"n":6,"rev":1472.49,"lt":329},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1770595200000,"n":3,"rev":992.2,"lt":123},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1768435200000,"n":3,"rev":990.0,"lt":98},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1759622400000,"n":3,"rev":685.36,"lt":1},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1766707200000,"n":4,"rev":2097.39,"lt":87},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1764374400000,"n":3,"rev":789.53,"lt":63},{"p":"Arrow Junction Cottage","c":"Other (OH)","s":"booked","d":1776988800000,"n":3,"rev":1400.0,"lt":209},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1770768000000,"n":4,"rev":1506.52,"lt":139},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1764720000000,"n":3,"rev":770.87,"lt":72},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1771286400000,"n":3,"rev":1061.51,"lt":149},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1767312000000,"n":3,"rev":1220.87,"lt":103},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1767484800000,"n":6,"rev":2291.03,"lt":105},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1776643200000,"n":4,"rev":1303.04,"lt":214},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1773100800000,"n":5,"rev":1536.48,"lt":173},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1773878400000,"n":4,"rev":1408.7,"lt":187},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1759881600000,"n":3,"rev":653.92,"lt":29},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1767052800000,"n":3,"rev":1220.87,"lt":113},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1769472000000,"n":4,"rev":1275.65,"lt":141},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1767052800000,"n":4,"rev":1627.83,"lt":114},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1774483200000,"n":4,"rev":1196.25,"lt":201},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1771804800000,"n":21,"rev":7712.61,"lt":172},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1766793600000,"n":3,"rev":1220.87,"lt":115},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1767571200000,"n":5,"rev":2844.78,"lt":130},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1782259200000,"n":3,"rev":842.57,"lt":301},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1782259200000,"n":3,"rev":986.09,"lt":301},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1759363200000,"n":3,"rev":756.1,"lt":36},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1765584000000,"n":3,"rev":864.78,"lt":120},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1775347200000,"n":7,"rev":2502.32,"lt":239},{"p":"Stone Cottage","c":"Booking.com","s":"cancelled","d":1770422400000,"n":3,"rev":1042.43,"lt":192},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1771372800000,"n":4,"rev":1686.91,"lt":211},{"p":"Stone Cottage","c":"Booking.com","s":"booked","d":1774656000000,"n":10,"rev":4032.39,"lt":257},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1781049600000,"n":9,"rev":2439.7,"lt":343},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1754179200000,"n":4,"rev":878.57,"lt":40},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1751846400000,"n":2,"rev":498.1,"lt":14},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1753574400000,"n":2,"rev":416.71,"lt":35},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1751846400000,"n":2,"rev":430.0,"lt":17},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1752019200000,"n":3,"rev":687.33,"lt":19},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1756857600000,"n":4,"rev":979.26,"lt":80},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1750896000000,"n":3,"rev":531.24,"lt":13},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1751328000000,"n":2,"rev":356.09,"lt":18},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1755734400000,"n":3,"rev":601.8,"lt":73},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1752105600000,"n":4,"rev":1035.42,"lt":35},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1772668800000,"n":5,"rev":1637.17,"lt":277},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1751846400000,"n":6,"rev":1454.24,"lt":36},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1759449600000,"n":4,"rev":837.77,"lt":129},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1749340800000,"n":3,"rev":500.24,"lt":12},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1753142400000,"n":5,"rev":1076.9,"lt":67},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1762905600000,"n":4,"rev":1552.33,"lt":181},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1760486400000,"n":3,"rev":649.55,"lt":161},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1749945600000,"n":10,"rev":2257.6,"lt":42},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1747353600000,"n":2,"rev":446.14,"lt":12},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1747612800000,"n":3,"rev":605.82,"lt":16},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1746316800000,"n":6,"rev":1189.74,"lt":4},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1746057600000,"n":2,"rev":399.76,"lt":2},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1760745600000,"n":7,"rev":1540.98,"lt":172},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1752451200000,"n":5,"rev":1628.42,"lt":76},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1747094400000,"n":2,"rev":423.84,"lt":15},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1771200000000,"n":5,"rev":1517.61,"lt":297},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1755302400000,"n":5,"rev":1419.11,"lt":113},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1749168000000,"n":2,"rev":396.58,"lt":46},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1754524800000,"n":7,"rev":1752.97,"lt":112},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1764633600000,"n":4,"rev":981.53,"lt":230},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1771718400000,"n":8,"rev":2785.23,"lt":312},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1755993600000,"n":4,"rev":1053.36,"lt":131},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1753747200000,"n":5,"rev":1391.66,"lt":106},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1751500800000,"n":4,"rev":1208.19,"lt":80},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1768694400000,"n":14,"rev":4556.82,"lt":283},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1742256000000,"n":2,"rev":408.21,"lt":1},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1765238400000,"n":9,"rev":2856.13,"lt":267},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1744502400000,"n":4,"rev":863.53,"lt":29},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1762041600000,"n":7,"rev":1507.12,"lt":233},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1745452800000,"n":1,"rev":216.01,"lt":43},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1764115200000,"n":6,"rev":1551.33,"lt":266},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1745798400000,"n":3,"rev":564.24,"lt":56},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1743292800000,"n":2,"rev":376.47,"lt":28},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1740873600000,"n":5,"rev":1013.96,"lt":40},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1741392000000,"n":3,"rev":712.52,"lt":58},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1763769600000,"n":3,"rev":817.92,"lt":328},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1742428800000,"n":10,"rev":2078.02,"lt":84},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1741737600000,"n":3,"rev":675.03,"lt":98},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1745280000000,"n":2,"rev":477.72,"lt":157},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1766361600000,"n":12,"rev":2893.56,"lt":430},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"cancelled","d":1757721600000,"n":8,"rev":1773.92,"lt":352},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1744070400000,"n":5,"rev":1289.48,"lt":210},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1743465600000,"n":6,"rev":1470.21,"lt":223},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1745107200000,"n":2,"rev":557.53,"lt":270},{"p":"Arrow Junction Cottage","c":"Booking.com","s":"booked","d":1744848000000,"n":3,"rev":720.76,"lt":334}];
+const PRECOMP = {"quarterly_revenue":{"2025-Q1":5264.21,"2025-Q2":12379.2,"2025-Q3":11429.460000000001,"2025-Q4":24488.030000000002,"2026-Q1":55656.05,"2026-Q2":29486.960000000003,"2026-Q3":47049.6,"2026-Q4":44146.310000000005,"2027-Q1":32256.82,"2027-Q2":6185.1900000000005,"2027-Q3":910.39},"cost_income_by_quarter":{"2025-Q1":{"revenue":5264.21,"costs":1842.4735,"cost_income":0.35000000000000003},"2025-Q2":{"revenue":12379.2,"costs":4332.72,"cost_income":0.35},"2025-Q3":{"revenue":11429.460000000001,"costs":4000.311,"cost_income":0.35},"2025-Q4":{"revenue":24488.03,"costs":8045.0605,"cost_income":0.3285303268576525},"2026-Q1":{"revenue":55656.05,"costs":19479.6175,"cost_income":0.35},"2026-Q2":{"revenue":29486.96,"costs":9249.775,"cost_income":0.3136903566864811},"2026-Q3":{"revenue":47049.6,"costs":16032.31,"cost_income":0.34075337516153165},"2026-Q4":{"revenue":44146.31,"costs":15365.178500000002,"cost_income":0.3480512527547603},"2027-Q1":{"revenue":32256.82,"costs":11302.937000000002,"cost_income":0.3504045656081412},"2027-Q2":{"revenue":6185.1900000000005,"costs":2164.8165000000004,"cost_income":0.35000000000000003},"2027-Q3":{"revenue":910.39,"costs":318.63649999999996,"cost_income":0.35}},"annual_summary":{"2025":{"revenue":53560.9,"costs":18220.565,"cost_income":0.3401840708427229,"nights":210,"adr":255.05190476190478,"yoy":null,"res":52},"2026":{"revenue":176338.92,"costs":60126.88100000001,"cost_income":0.3409733994060982,"nights":459,"adr":384.1806535947713,"yoy":2.2923068880470643,"res":110},"2027":{"revenue":39352.4,"costs":13786.39,"cost_income":0.3503316189101554,"nights":65,"adr":605.4215384615385,"yoy":-0.7768365599607846,"res":18}},"annual_total":{"revenue":269252.22,"costs":92133.836,"nights":734,"cost_income":0.3421841275811951,"adr":366.8286376021798},"monthly":{"2025-03":{"revenue":5264.21,"nights":25,"res":6},"2025-04":{"revenue":6159.4800000000005,"nights":26,"res":8},"2025-05":{"revenue":3065.3,"nights":15,"res":5},"2025-06":{"revenue":3154.42,"nights":15,"res":3},"2025-07":{"revenue":6765.299999999999,"nights":26,"res":7},"2025-08":{"revenue":3684.8999999999996,"nights":15,"res":3},"2025-09":{"revenue":979.26,"nights":4,"res":1},"2025-10":{"revenue":4259.96,"nights":19,"res":5},"2025-11":{"revenue":6114.03,"nights":23,"res":6},"2025-12":{"revenue":14114.039999999999,"nights":42,"res":8},"2026-01":{"revenue":20060.11,"nights":55,"res":12},"2026-02":{"revenue":21949.95,"nights":58,"res":11},"2026-03":{"revenue":13645.99,"nights":42,"res":9},"2026-04":{"revenue":15384.91,"nights":37,"res":10},"2026-05":{"revenue":5358.26,"nights":18,"res":4},"2026-06":{"revenue":8743.79,"nights":29,"res":8},"2026-07":{"revenue":15799.190000000002,"nights":45,"res":12},"2026-08":{"revenue":16523.89,"nights":44,"res":12},"2026-09":{"revenue":14726.52,"nights":41,"res":10},"2026-10":{"revenue":14769.2,"nights":36,"res":8},"2026-11":{"revenue":14574.02,"nights":31,"res":8},"2026-12":{"revenue":14803.09,"nights":23,"res":6},"2027-01":{"revenue":17382.45,"nights":30,"res":7},"2027-02":{"revenue":12423.82,"nights":16,"res":5},"2027-03":{"revenue":2450.55,"nights":5,"res":2},"2027-04":{"revenue":5305.1900000000005,"nights":10,"res":2},"2027-05":{"revenue":880.0,"nights":2,"res":1},"2027-07":{"revenue":910.39,"nights":2,"res":1}},"revenue_by_channel_alltime":{"Booking.com":238234.88,"Airbnb":15926.0,"Other (OH)":7680.6,"Direct / Manual":7410.74},"nights_by_channel_alltime":{"Booking.com":663,"Airbnb":36,"Other (OH)":21,"Direct / Manual":14},"cancellations_alltime":{"Stone Cottage":{"count":31,"lost":55952.19},"Arrow Junction Cottage":{"count":39,"lost":54081.68}},"cancellations_alltime_total":{"count":70,"lost":110033.87},"lead_time_dist":{"31-90 days":60,"8-30 days":20,"91-180 days":50,"0-7 days":15,"180+ days":35},"stay_length_dist":{"1-2 nts":35,"3-4 nts":103,"8+ nts":13,"5-7 nts":29},"direct_share_by_month":{"2025-03":{"direct":0.0,"total":5264.21},"2025-04":{"direct":0.0,"total":6159.4800000000005},"2025-05":{"direct":0.0,"total":3065.3},"2025-06":{"direct":0.0,"total":3154.42},"2025-07":{"direct":0.0,"total":6765.299999999999},"2025-08":{"direct":0.0,"total":3684.8999999999996},"2025-09":{"direct":0.0,"total":979.26},"2025-10":{"direct":0.0,"total":4259.96},"2025-11":{"direct":0.0,"total":6114.03},"2025-12":{"direct":3505.0,"total":14114.039999999999},"2026-01":{"direct":0.0,"total":20060.11},"2026-02":{"direct":0.0,"total":21949.95},"2026-03":{"direct":0.0,"total":13645.99},"2026-04":{"direct":5305.74,"total":15384.91},"2026-05":{"direct":0.0,"total":5358.26},"2026-06":{"direct":1832.0,"total":8743.79},"2026-07":{"direct":594.0,"total":15799.190000000002},"2026-08":{"direct":2784.6,"total":16523.89},"2026-09":{"direct":0.0,"total":14726.52},"2026-10":{"direct":0.0,"total":14769.2},"2026-11":{"direct":1070.0,"total":14574.02},"2026-12":{"direct":0.0,"total":14803.09},"2027-01":{"direct":0.0,"total":17382.45},"2027-02":{"direct":0.0,"total":12423.82},"2027-03":{"direct":0.0,"total":2450.55},"2027-04":{"direct":0.0,"total":5305.1900000000005},"2027-05":{"direct":0.0,"total":880.0},"2027-07":{"direct":0.0,"total":910.39}},"margin_by_property":{"Stone Cottage":{"revenue":134287.75,"commission":19697.9425,"cleaning":26857.550000000003,"net":87732.25749999999,"margin":0.653315417824783,"direct_share":0.027530433714169758},"Arrow Junction Cottage":{"revenue":134964.47,"commission":18585.4495,"cleaning":26992.894,"net":89386.1265,"margin":0.6622937614618128,"direct_share":0.0844247378587861}},"growth_2025_2026":{"rev_2025":53560.9,"rev_2026":176338.92,"rev_growth":2.2923068880470643,"direct_2025":3505.0,"direct_2026":11586.34,"direct_growth":2.305660485021398}};
+const WINDOW_FROM = "15/09/2026";
+const WINDOW_TO = "15/09/2027";
+
+function toggleTheme(){
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  root.setAttribute('data-theme', isLight ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isLight ? 'Light' : 'Dark';
+}
+
+function fmtMoney(v){ return '$' + Math.round(v).toLocaleString(); }
+function fmtMoney2(v){ return '$' + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtPct(v){ return Math.round(v*100) + '%'; }
+
+function toDMY(d){
+  const dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function computeAndRender(){
+  const fromV = document.getElementById('fFrom').value;
+  const toV = document.getElementById('fTo').value;
+  const prop = document.getElementById('fProp').value;
+  const chan = document.getElementById('fChan').value;
+  const from = new Date(fromV + 'T00:00:00Z').getTime();
+  const to = new Date(toV + 'T23:59:59Z').getTime();
+
+  const rows = RESERVATIONS.filter(r => r.d >= from && r.d <= to && (prop==='all'||r.p===prop) && (chan==='all'||r.c===chan));
+  const booked = rows.filter(r=>r.s==='booked');
+  const cancelledRows = rows.filter(r=>r.s==='cancelled');
+
+  const totalRevenue = booked.reduce((a,r)=>a+r.rev,0);
+  const totalNights = booked.reduce((a,r)=>a+r.n,0);
+  const totalBookings = booked.length;
+  const days = Math.max(1, Math.round((to-from)/86400000));
+  const propCount = prop==='all' ? 2 : 1;
+  const availNights = days * propCount;
+  const occ = totalNights/availNights;
+  const revpar = totalRevenue/availNights;
+  const adr = totalNights ? totalRevenue/totalNights : 0;
+  const avgBooking = totalBookings ? totalRevenue/totalBookings : 0;
+  const avgStay = totalBookings ? totalNights/totalBookings : 0;
+  const avgLead = totalBookings ? booked.reduce((a,r)=>a+r.lt,0)/totalBookings : 0;
+  const canc = cancelledRows.length;
+  const cancLost = cancelledRows.reduce((a,r)=>a+r.rev,0);
+  const directRows = booked.filter(r=>r.c==='Direct / Manual'||r.c==='Other (OH)');
+  const directRev = directRows.reduce((a,r)=>a+r.rev,0);
+  const COMMISSION = {'Booking.com':0.15,'Airbnb':0.16,'Other (OH)':0,'Direct / Manual':0};
+  const commissionCost = booked.reduce((a,r)=>a+r.rev*COMMISSION[r.c],0);
+  const cleaningCost = totalRevenue*0.20;
+  const netContribution = totalRevenue - commissionCost - cleaningCost;
+  const margin = totalRevenue ? netContribution/totalRevenue : 0;
+  const commissionSaved = directRev*0.155;
+
+  document.getElementById('overviewTiles').innerHTML = `
+  <div class="grid">
+    <div class="tile hi"><div class="lbl">Total Revenue</div><div class="val">${fmtMoney(totalRevenue)}</div><div class="sub">${totalBookings} bookings</div></div>
+    <div class="tile"><div class="lbl">Nights Booked</div><div class="val">${totalNights}</div><div class="sub">&nbsp;</div></div>
+    <div class="tile"><div class="lbl">Occupancy Rate</div><div class="val">${fmtPct(occ)}</div><div class="sub">room-nights in period</div></div>
+    <div class="tile"><div class="lbl">RevPAR</div><div class="val">${fmtMoney2(revpar)}</div><div class="sub">rev / avail night</div></div>
+    <div class="tile"><div class="lbl">ADR (price / night)</div><div class="val">${fmtMoney2(adr)}</div><div class="sub">&nbsp;</div></div>
+    <div class="tile"><div class="lbl">Avg Booking Value</div><div class="val">${fmtMoney(avgBooking)}</div><div class="sub">&nbsp;</div></div>
+    <div class="tile"><div class="lbl">Avg Stay Length</div><div class="val">${avgStay.toFixed(2)} nts</div><div class="sub">&nbsp;</div></div>
+    <div class="tile"><div class="lbl">Avg Lead Time</div><div class="val">${Math.round(avgLead)} days</div><div class="sub">booking&rarr;check-in</div></div>
+    <div class="tile"><div class="lbl">Guests Hosted</div><div class="val">${totalBookings}</div><div class="sub">reservations*</div></div>
+    <div class="tile"><div class="lbl">Cancellations</div><div class="val">${canc}</div><div class="sub">${fmtMoney(cancLost)} lost (in-period)</div></div>
+    <div class="tile hi"><div class="lbl">Commission Saved (Direct)</div><div class="val">${fmtMoney(commissionSaved)}</div><div class="sub">${fmtMoney(directRev)} direct rev</div></div>
+    <div class="tile"><div class="lbl">Direct Bookings</div><div class="val">${directRows.length}</div><div class="sub">${totalRevenue? (directRev/totalRevenue*100).toFixed(1):'0'}% of revenue &middot; commission-free</div></div>
+    <div class="tile"><div class="lbl">Operating Margin</div><div class="val">${fmtPct(margin)}</div><div class="sub">after commission &amp; cleaning</div></div>
+    <div class="tile"><div class="lbl">Net Contribution</div><div class="val">${fmtMoney(netContribution)}</div><div class="sub">rev &minus; commission &minus; cleaning</div></div>
+  </div>`;
+
+  // property table
+  const props = prop==='all' ? ['Stone Cottage','Arrow Junction Cottage'] : [prop];
+  let pRows = '';
+  let pTotRev=0,pTotNights=0,pTotRes=0;
+  props.forEach(p=>{
+    const pr = booked.filter(r=>r.p===p);
+    const rv = pr.reduce((a,r)=>a+r.rev,0), nt = pr.reduce((a,r)=>a+r.n,0);
+    pTotRev+=rv; pTotNights+=nt; pTotRes+=pr.length;
+    pRows += `<tr><td>${p}</td><td>${fmtMoney(rv)}</td><td>${nt}</td><td>${pr.length}</td><td>${fmtMoney2(nt?rv/nt:0)}</td><td>${(pr.length?nt/pr.length:0).toFixed(1)} nts</td></tr>`;
+  });
+  pRows += `<tr><td>Total</td><td>${fmtMoney(pTotRev)}</td><td>${pTotNights}</td><td>${pTotRes}</td><td>${fmtMoney2(pTotNights?pTotRev/pTotNights:0)}</td><td>${(pTotRes?pTotNights/pTotRes:0).toFixed(1)} nts</td></tr>`;
+  document.getElementById('propTable').querySelector('tbody').innerHTML = pRows;
+
+  // channel table
+  const chans = chan==='all' ? ['Booking.com','Airbnb','Other (OH)','Direct / Manual'] : [chan];
+  let cRows=''; let cTotRev=0,cTotNights=0,cTotRes=0;
+  chans.forEach(c=>{
+    const cr = booked.filter(r=>r.c===c);
+    if(!cr.length) return;
+    const rv=cr.reduce((a,r)=>a+r.rev,0), nt=cr.reduce((a,r)=>a+r.n,0);
+    cTotRev+=rv; cTotNights+=nt; cTotRes+=cr.length;
+    cRows += `<tr><td>${c}</td><td>${fmtMoney(rv)}</td><td>${nt}</td><td>${cr.length}</td><td>${fmtMoney2(nt?rv/nt:0)}</td><td>${fmtMoney(cr.length?rv/cr.length:0)}</td></tr>`;
+  });
+  cRows += `<tr><td>Total</td><td>${fmtMoney(cTotRev)}</td><td>${cTotNights}</td><td>${cTotRes}</td><td>${fmtMoney2(cTotNights?cTotRev/cTotNights:0)}</td><td>${fmtMoney(cTotRes?cTotRev/cTotRes:0)}</td></tr>`;
+  document.getElementById('chanTable').querySelector('tbody').innerHTML = cRows;
+}
+
+function setPreset(kind){
+  document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
+  const now = new Date();
+  let from, to;
+  if(kind==='ytd'){ from = new Date(Date.UTC(now.getUTCFullYear(),0,1)); to = now; document.querySelectorAll('.preset')[0].classList.add('active'); }
+  else if(kind==='last12'){ to = now; from = new Date(now.getTime()-365*86400000); document.querySelectorAll('.preset')[1].classList.add('active'); }
+  else if(kind==='upcoming'){ from = now; to = new Date(now.getTime()+365*86400000); document.getElementById('presetUpcoming').classList.add('active'); }
+  else { from = new Date('2025-01-01'); to = new Date('2027-12-31'); document.querySelectorAll('.preset')[3].classList.add('active'); }
+  document.getElementById('fFrom').value = toDMY(from);
+  document.getElementById('fTo').value = toDMY(to);
+  computeAndRender();
+}
+
+document.getElementById('fFrom').addEventListener('change', ()=>{document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active')); computeAndRender();});
+document.getElementById('fTo').addEventListener('change', ()=>{document.querySelectorAll('.preset').forEach(b=>b.classList.remove('active')); computeAndRender();});
+document.getElementById('fProp').addEventListener('change', computeAndRender);
+document.getElementById('fChan').addEventListener('change', computeAndRender);
+
+setPreset('upcoming');
+
+// ---- static charts (all-time, all properties/channels) ----
+const teal = '#2dd4bf', tealDk='#0f766e', slate='#64748b', amber='#fbbf24', rose='#f87171', textCol = getComputedStyle(document.documentElement).getPropertyValue('--text') || '#e6edf7';
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(148,163,184,.15)';
+
+new Chart(document.getElementById('chartQuarterly'), {
+  type:'bar',
+  data:{ labels:Object.keys(PRECOMP.quarterly_revenue), datasets:[{label:'Revenue', data:Object.values(PRECOMP.quarterly_revenue), backgroundColor:teal}] },
+  options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'$'+(v/1000)+'k'}}} }
+});
+
+new Chart(document.getElementById('chartAnnual'), {
+  type:'bar',
+  data:{ labels:Object.keys(PRECOMP.annual_summary), datasets:[{label:'Revenue', data:Object.values(PRECOMP.annual_summary).map(v=>v.revenue), backgroundColor:[slate,teal,tealDk]}] },
+  options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'$'+(v/1000)+'k'}}} }
+});
+
+new Chart(document.getElementById('chartCostIncome'), {
+  data:{ labels:Object.keys(PRECOMP.cost_income_by_quarter),
+    datasets:[
+      {type:'bar', label:'Costs', data:Object.values(PRECOMP.cost_income_by_quarter).map(v=>v.costs), backgroundColor:rose, order:2},
+      {type:'bar', label:'Net income', data:Object.values(PRECOMP.cost_income_by_quarter).map(v=>v.revenue-v.costs), backgroundColor:teal, order:2},
+      {type:'line', label:'Cost:Income %', data:Object.values(PRECOMP.cost_income_by_quarter).map(v=>v.cost_income*100), yAxisID:'y1', borderColor:amber, backgroundColor:amber, order:1}
+    ] },
+  options:{ scales:{ x:{stacked:true}, y:{stacked:true, ticks:{callback:v=>'$'+(v/1000)+'k'}}, y1:{position:'right', min:0, max:100, grid:{drawOnChartArea:false}, ticks:{callback:v=>v+'%'}} } }
+});
+
+const monthLabels = Object.keys(PRECOMP.monthly);
+new Chart(document.getElementById('chartMonthly'), {
+  type:'bar',
+  data:{ labels:monthLabels, datasets:[{label:'Revenue', data:monthLabels.map(m=>PRECOMP.monthly[m].revenue), backgroundColor:teal}] },
+  options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'$'+(v/1000)+'k'}}} }
+});
+
+new Chart(document.getElementById('chartChannelRev'), {
+  type:'doughnut',
+  data:{ labels:Object.keys(PRECOMP.revenue_by_channel_alltime), datasets:[{data:Object.values(PRECOMP.revenue_by_channel_alltime), backgroundColor:[teal,amber,slate,rose]}] },
+});
+
+new Chart(document.getElementById('chartChannelNights'), {
+  type:'doughnut',
+  data:{ labels:Object.keys(PRECOMP.nights_by_channel_alltime), datasets:[{data:Object.values(PRECOMP.nights_by_channel_alltime), backgroundColor:[teal,amber,slate,rose]}] },
+});
+
+new Chart(document.getElementById('chartMarginProp'), {
+  type:'bar',
+  data:{ labels:Object.keys(PRECOMP.margin_by_property),
+    datasets:[
+      {label:'Commission', data:Object.values(PRECOMP.margin_by_property).map(v=>v.commission), backgroundColor:rose},
+      {label:'Cleaning', data:Object.values(PRECOMP.margin_by_property).map(v=>v.cleaning), backgroundColor:amber},
+      {label:'Net contribution', data:Object.values(PRECOMP.margin_by_property).map(v=>v.net), backgroundColor:teal}
+    ] },
+  options:{ scales:{ x:{stacked:true}, y:{stacked:true, ticks:{callback:v=>'$'+(v/1000)+'k'}} } }
+});
+
+const dsm = PRECOMP.direct_share_by_month;
+const dsmLabels = Object.keys(dsm);
+new Chart(document.getElementById('chartDirectShare'), {
+  type:'line',
+  data:{ labels:dsmLabels, datasets:[{label:'Direct share %', data:dsmLabels.map(m=>dsm[m].total? dsm[m].direct/dsm[m].total*100:0), borderColor:teal, backgroundColor:teal}] },
+  options:{ scales:{ y:{min:0, ticks:{callback:v=>v+'%'}} } }
+});
+
+new Chart(document.getElementById('chartLeadTime'), {
+  type:'bar',
+  data:{ labels:['0-7 days','8-30 days','31-90 days','91-180 days','180+ days'], datasets:[{label:'Bookings', data:['0-7 days','8-30 days','31-90 days','91-180 days','180+ days'].map(k=>PRECOMP.lead_time_dist[k]||0), backgroundColor:teal}] },
+  options:{ plugins:{legend:{display:false}} }
+});
+
+new Chart(document.getElementById('chartStayLength'), {
+  type:'bar',
+  data:{ labels:['1-2 nts','3-4 nts','5-7 nts','8+ nts'], datasets:[{label:'Bookings', data:['1-2 nts','3-4 nts','5-7 nts','8+ nts'].map(k=>PRECOMP.stay_length_dist[k]||0), backgroundColor:teal}] },
+  options:{ plugins:{legend:{display:false}} }
+});
+
+new Chart(document.getElementById('chartGrowthRev'), {
+  type:'bar',
+  data:{ labels:['2025','2026'], datasets:[{label:'Revenue', data:[PRECOMP.growth_2025_2026.rev_2025, PRECOMP.growth_2025_2026.rev_2026], backgroundColor:[slate,teal]}] },
+  options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>'$'+(v/1000)+'k'}}} }
+});
+
+new Chart(document.getElementById('chartGrowthDirect'), {
+  type:'bar',
+  data:{ labels:['2025','2026'], datasets:[{label:'Direct revenue', data:[PRECOMP.growth_2025_2026.direct_2025, PRECOMP.growth_2025_2026.direct_2026], backgroundColor:[slate,teal]}] },
+  options:{ plugins:{legend:{display:false}} }
+});
+</script>
+</body>
+</html>
